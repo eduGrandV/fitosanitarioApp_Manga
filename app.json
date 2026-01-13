@@ -29,7 +29,13 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-router", "expo-location"],
+    "plugins": [
+      "expo-router",
+      "expo-location"
+    ],
+    "experiments": {
+      "newArchEnabled": false
+    },
     "extra": {
       "router": {
         "origin": false

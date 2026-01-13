@@ -5,7 +5,8 @@ export const useResumoPlanta = (
     avaliacoes: Registro[],
     plantaSelecionada: number,
     lote: string,
-    centroCustoSelecionado: string
+    centroCustoSelecionado: string,
+    qtdePlantas: number 
 ) => {
 
     const resumoDaPlanta = useMemo(() => {
@@ -13,7 +14,7 @@ export const useResumoPlanta = (
             plantaNumero: number,
             cc: string
         ): ItemResumo[] => {
-            const loteNum = Number(lote);
+            
             return doencasPragas.map((item) => {
                 
                 const registrosItem = avaliacoes.filter(
@@ -23,7 +24,6 @@ export const useResumoPlanta = (
                         a.centroCusto === cc
                 );
 
-               
                 const orgaos = item.orgaos.map((o) => {
                     const registrosOrgao = registrosItem.filter(
                         (r) => r.orgao === o.nome
@@ -42,7 +42,8 @@ export const useResumoPlanta = (
 
                     if (item.tipo === "doenca") {
                         const isFolha = o.nome.toUpperCase().includes("FOLHA");
-                        const maxPorOrgao = (isFolha ? 8 : 4) * loteNum;
+                        // Usa qtdePlantas para calcular o máximo
+                        const maxPorOrgao = (isFolha ? 8 : 4) * qtdePlantas; 
                         const porcentagem =
                             maxPorOrgao > 0 ? (totalNotas * 100) / maxPorOrgao : 0;
                         return {
@@ -62,9 +63,12 @@ export const useResumoPlanta = (
                             .map((r) => Number(r.nota ?? 0));
                         const totalBordadura = bordaduraNotas.reduce((s, n) => s + n, 0);
                         const totalArea = areaNotas.reduce((s, n) => s + n, 0);
+                        
+                        // Lógica baseada na quantidade de plantas (10, 14 ou 18)
                         let maxBordadura = 4, maxArea = 6;
-                        if (loteNum === 14) { maxBordadura = 5; maxArea = 9; }
-                        if (loteNum === 18) { maxBordadura = 6; maxArea = 12; }
+                        if (qtdePlantas === 14) { maxBordadura = 5; maxArea = 9; }
+                        else if (qtdePlantas === 18) { maxBordadura = 6; maxArea = 12; }
+                        
                         const temRamo = registrosOrgao.some((r) => !!r.ramo);
                         const multiplicador = temRamo ? 8 : 4;
                         const pctB = maxBordadura * multiplicador > 0 ? (totalBordadura * 100) / (maxBordadura * multiplicador) : 0;
@@ -89,12 +93,13 @@ export const useResumoPlanta = (
                     if (!resumoOrgao) return;
                     if (item.tipo === "doenca") {
                         const isFolha = o.nome.toUpperCase().includes("FOLHA");
-                        const max = (isFolha ? 8 : 4) * loteNum;
+                        const max = (isFolha ? 8 : 4) * qtdePlantas; // Usa qtdePlantas
                         somaMax += max;
                         somaNotas += (resumoOrgao as any).totalNotas ?? 0;
                     } else {
-                        const maxB = loteNum === 14 ? 5 : loteNum === 18 ? 6 : 4;
-                        const maxA = loteNum === 14 ? 9 : loteNum === 18 ? 12 : 6;
+                        // Lógica de Pragas
+                        const maxB = qtdePlantas === 14 ? 5 : qtdePlantas === 18 ? 6 : 4;
+                        const maxA = qtdePlantas === 14 ? 9 : qtdePlantas === 18 ? 12 : 6;
                         const temRamo = (resumoOrgao as any).temRamo ? 8 : 4;
                         somaMax += (maxB + maxA) * temRamo;
                         somaNotas += ((resumoOrgao as any).totalBordadura ?? 0) + ((resumoOrgao as any).totalArea ?? 0);
@@ -108,8 +113,7 @@ export const useResumoPlanta = (
         if (!avaliacoes || avaliacoes.length === 0 || !centroCustoSelecionado)
             return [];
         return calcularResumoPlanta(plantaSelecionada, centroCustoSelecionado);
-    }, [avaliacoes, plantaSelecionada, lote, centroCustoSelecionado]);
-
+    }, [avaliacoes, plantaSelecionada, lote, centroCustoSelecionado, qtdePlantas]); // qtdePlantas na dependência
 
     return resumoDaPlanta;
 };

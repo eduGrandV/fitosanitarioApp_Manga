@@ -2,6 +2,23 @@ import * as Location from "expo-location";
 import { Alert } from "react-native";
 import { PontoLocalizacao } from "../data/daodaAvaliacao";
 
+export const localizacaoPadrao = {
+  latitude: -9.287495,
+  longitude: -40.878419,
+};
+
+const criarPontoLocalizacao = (
+  lote: string,
+  { latitude, longitude, accuracy }: { latitude: number; longitude: number; accuracy?: number }
+): PontoLocalizacao => ({
+  id: Date.now(),
+  lote,
+  latitude,
+  longitude,
+  accuracy: accuracy ?? 0, 
+  timestamp: Date.now(),
+});
+
 export async function Gps() {
   const { status } = await Location.requestForegroundPermissionsAsync();
   if (status !== "granted") {
@@ -14,52 +31,34 @@ export async function Gps() {
     latitude: loc.coords.latitude,
     longitude: loc.coords.longitude,
     altitude: loc.coords.altitude,
-    accuracy: loc.coords.accuracy, // precisão horizontal
-    altitudeAccuracy: loc.coords.altitudeAccuracy, // precisão da altitude
-    heading: loc.coords.heading, // direção do dispositivo
-    speed: loc.coords.speed, // velocidade em m/s
-    timestamp: loc.timestamp, // hora  da coleta
+    accuracy: loc.coords.accuracy,
+    altitudeAccuracy: loc.coords.altitudeAccuracy, 
+    heading: loc.coords.heading, 
+    speed: loc.coords.speed, 
+    timestamp: loc.timestamp, 
   };
 }
-
-// Função para bucar a loc na hora de marcar
-
-const criarPontoLocalizacao = (
-  lote: string,
-  { latitude, longitude }: { latitude: number; longitude: number }
-): PontoLocalizacao => ({
-  id: Date.now(),
-  lote,
-  latitude,
-  longitude,
-  timestamp: Date.now(),
-});
 
 export const obterLocalizacaoComTime = async (
   lote: string,
   timeoutMs = 5000
 ): Promise<PontoLocalizacao> => {
-  const localizacaoPadrao = {
-    latitude: -9.287495,
-    longitude: -40.878419,
-  };
+
   try {
-    //permissão
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      console.warn(
-        "Permissão de localização negada, usando coordenadas padrão."
-      );
-      return criarPontoLocalizacao(lote, localizacaoPadrao);
+      console.warn("Permissão de localização negada, usando coordenadas padrão.");
+      return criarPontoLocalizacao(lote, {
+          ...localizacaoPadrao,
+          accuracy: 999 
+      });
     }
 
-    // promessa para tentar pegar a posição
     const posicaoPromise = Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Low,
+      accuracy: Location.Accuracy.Highest, 
       mayShowUserSettingsDialog: false,
     });
 
-    //timeout de 3 segundos
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(
         () => reject(new Error("Timeout ao buscar localização")),
@@ -67,18 +66,36 @@ export const obterLocalizacaoComTime = async (
       )
     );
 
-    //espera qual vem primeiro
-    const posicao = await Promise.race([posicaoPromise, timeoutPromise]);
+    const posicao: any = await Promise.race([posicaoPromise, timeoutPromise]);
 
-    //se der certo
     return criarPontoLocalizacao(lote, {
       latitude: posicao.coords.latitude,
       longitude: posicao.coords.longitude,
+      accuracy: posicao.coords.accuracy,
     });
-  } catch (error) {
-    console.warn("Erro ao obter localização:", error);
 
-    //se falhar, loc padrão
-    return criarPontoLocalizacao(lote, localizacaoPadrao);
+  } catch (error) {
+    console.warn("Erro ao obter localização atual:", error);
+
+    try {
+        const ultimaPosicao = await Location.getLastKnownPositionAsync();
+        if (ultimaPosicao) {
+            console.log("Recuperada última localização válida (Cache)");
+            return criarPontoLocalizacao(lote, {
+                latitude: ultimaPosicao.coords.latitude,
+                longitude: ultimaPosicao.coords.longitude,
+                accuracy: ultimaPosicao.coords.accuracy ?? 0,
+            });
+        }
+    } catch (cacheError) {
+        console.warn("Falha ao recuperar cache.");
+    }
+
+    console.warn("Usando localização padrão fixa.");
+    return criarPontoLocalizacao(lote, {
+        latitude: localizacaoPadrao.latitude,
+        longitude: localizacaoPadrao.longitude,
+        accuracy: 999, 
+    });
   }
 };

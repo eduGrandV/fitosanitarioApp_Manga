@@ -7,7 +7,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DoencaPraga, locaPlanta, Registro } from "../data/daodaAvaliacao";
 import { Gps } from "./gps";
 
-// Função auxiliar que busca os dados de um lote específico e os retorna.
 const getDadosDoLote = async (lote: string): Promise<Registro[]> => {
   const chave = `@avaliacoes_${lote}`;
   const jsonDados = await AsyncStorage.getItem(chave);
@@ -144,7 +143,6 @@ export async function gerarPDF(
     .filter(Boolean)
     .join("");
 
-  // --- INÍCIO DA CONSTRUÇÃO DO HTML ---
   let html = `
     <html>
     <head>
@@ -188,7 +186,6 @@ export async function gerarPDF(
   for (const planta of plantasAvaliadas) {
     const avaliacoesDaPlanta = avaliacoes.filter((r) => r.planta === planta);
 
-    // 1. PRIMEIRO, agrupa todas as avaliações desta planta por Centro de Custo
     const avaliacoesPorCC: Record<string, Registro[]> =
       avaliacoesDaPlanta.reduce((acc, avaliacao) => {
         const cc = avaliacao.centroCusto || "N/A";
@@ -199,13 +196,11 @@ export async function gerarPDF(
         return acc;
       }, {} as Record<string, Registro[]>);
 
-    // 2. DEPOIS, itera sobre cada grupo de Centro de Custo
     for (const centroCusto in avaliacoesPorCC) {
       const avaliacoesDoCC = avaliacoesPorCC[centroCusto];
       const localInfo = locaPlanta.find((l) => l.centroCusto === centroCusto);
       const nomeDoLocal = localInfo ? localInfo.name : centroCusto;
 
-      // Adiciona um sub-cabeçalho para o Centro de Custo, deixando a seção clara
       html += `<h3 style="background-color: #f3f4f6; padding: 8px; border-radius: 4px; margin-top: 20px; border-left: 4px solid #9ca3af;">Local: ${nomeDoLocal} (CC: ${centroCusto})</h3>`;
 
       const itensAvaliadosNoCC = [
@@ -232,14 +227,11 @@ export async function gerarPDF(
             `;
 
         for (const o of itemSelecionado.orgaos) {
-          // Agora, filtramos dentro do grupo do CC, garantindo a separação correta
           const registrosDoOrgao = avaliacoesDoCC.filter(
             (r) => r.orgao === o.nome && r.doencaOuPraga === nomeItem
           );
           if (registrosDoOrgao.length === 0) continue;
 
-          // O restante da sua lógica para criar as linhas da tabela (doença, praga, etc.)
-          // continua aqui, pois agora opera sobre os dados já separados por CC.
           if (itemSelecionado.nome === "INIMIGOS NATURAIS") {
             const registro = registrosDoOrgao[0];
             const status =
@@ -268,7 +260,6 @@ export async function gerarPDF(
               2
             )}%</td></tr>`;
           } else {
-            // PRAGA
             const bordaduraRegistros = registrosDoOrgao.filter(
               (r) => r.identificadorDeLocal === "Bordadura"
             );

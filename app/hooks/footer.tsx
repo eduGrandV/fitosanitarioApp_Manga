@@ -1,4 +1,4 @@
-import { Alert, Button, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useCallback, useMemo, useState } from "react";
 
 import { doencasPragas, locaPlanta, Registro } from "../../data/daodaAvaliacao";
@@ -6,8 +6,6 @@ import { salvarAvaliacoes } from "../../components/asyncStorage";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import { gerarRelatorioDoLote } from "../../components/pdf";
 
-
-// ==================== HOOKS DE STATE ====================
 export const useAvaliacaoScreenState = (
     numeroDePlantas: number,
     lote: string
@@ -44,7 +42,6 @@ export const useAvaliacaoScreenState = (
     };
 };
 
-// ==================== HOOKS DE CALLBACKS ====================
 export const useAvaliacaoCallbacks = ({
     setPlantaSelecionada,
     setFiltroSelecionado,
@@ -80,7 +77,6 @@ export const useAvaliacaoCallbacks = ({
     return { handlePlantaChange, handleLocalChange, handleFiltroChange };
 };
 
-// ==================== RENDER FOOTER ====================
 interface RenderFooterProps {
     plantas: number[];
     plantaSelecionada: number;
@@ -114,85 +110,69 @@ export const RenderFooter = ({
     const [mostrarResumo, setMostrarResumo] = useState(false);
 
     return (
-        <>
-            <Button title="Mostrar Cálculo Técnico" onPress={() => setMostrarResumo(true)} />
+        <View style={styles.footerContainer}>
+            <Pressable 
+                style={({pressed}) => [
+                    styles.secondaryButton, 
+                    pressed && {opacity: 0.8}
+                ]}
+                onPress={() => setMostrarResumo(!mostrarResumo)}
+            >
+                <Text style={styles.secondaryButtonText}>
+                    {mostrarResumo ? "Ocultar Cálculo Técnico" : "Mostrar Cálculo Técnico"}
+                </Text>
+            </Pressable>
 
-
-            {mostrarResumo && (
-                 <View>
-                {plantaSelecionada && (
+            {mostrarResumo && plantaSelecionada && (
+                <View style={styles.summaryContainer}>
                     <ErrorBoundary>
                         <View style={styles.summaryCard}>
-                            <Text style={styles.summaryTitle}>
-                                📊 Cálculo Técnico - Planta {plantaSelecionada}
+                            <Text style={styles.summaryHeader}>
+                                📊 Resumo - Planta {plantaSelecionada}
                             </Text>
 
                             {resumoDaPlanta.length === 0 ? (
-                                <Text style={{ color: "#6b7280" }}>
+                                <Text style={styles.emptyText}>
                                     Nenhum dado registrado para esta planta.
                                 </Text>
                             ) : (
                                 resumoDaPlanta
-                             
                                     .filter((item) =>
                                         item.orgaos?.some((o: any) => {
                                             if (item.tipo === "doenca") return (o.totalNotas ?? 0) > 0;
-                                            else
-                                                return (
-                                                    (o.totalBordadura ?? 0) > 0 ||
-                                                    (o.totalArea ?? 0) > 0
-                                                );
+                                            else return ((o.totalBordadura ?? 0) > 0 || (o.totalArea ?? 0) > 0);
                                         })
                                     )
                                     .map((item, idx) => (
-                                        <View key={item.nome + idx} style={{ marginBottom: 12 }}>
-                                            {/* Título da doença/praga */}
-                                            <Text
-                                                style={{
-                                                    fontWeight: "700",
-                                                    fontSize: 16,
-                                                    color: item.tipo === "doenca" ? "#065f46" : "#c2410c",
-                                                    marginBottom: 6,
-                                                }}
-                                            >
+                                        <View key={item.nome + idx} style={styles.summaryItem}>
+                                            <Text style={styles.summaryItemTitle}>
                                                 {item.nome} — {item.percentualComposto?.toFixed(2) ?? 0}%
                                             </Text>
 
-                                            {/* Detalhamento dos órgãos */}
                                             {(item.orgaos || [])
                                                 .filter((o: any) => {
                                                     if (item.tipo === "doenca") return (o.totalNotas ?? 0) > 0;
-                                                    else
-                                                        return (
-                                                            (o.totalBordadura ?? 0) > 0 ||
-                                                            (o.totalArea ?? 0) > 0
-                                                        );
+                                                    else return ((o.totalBordadura ?? 0) > 0 || (o.totalArea ?? 0) > 0);
                                                 })
                                                 .map((o: any, j: any) => (
-                                                    <View key={o.nome + j} style={{ marginLeft: 12, marginBottom: 4 }}>
-                                                        <Text style={{ fontWeight: "600", color: "#1e293b" }}>
-                                                            • {o.nome}
-                                                        </Text>
-
+                                                    <View key={o.nome + j} style={styles.organRow}>
+                                                        <Text style={styles.organName}>• {o.nome}</Text>
                                                         {item.tipo === "doenca" ? (
-                                                            <Text style={{ color: "#334155" }}>
-                                                                Total: {o.totalNotas ?? 0} — %:{" "}
-                                                                {(o.porcentagem ?? 0).toFixed(2)}%
+                                                            <Text style={styles.organDetail}>
+                                                                Total: {o.totalNotas ?? 0} ({ (o.porcentagem ?? 0).toFixed(2) }%)
                                                             </Text>
                                                         ) : (
-                                                            <>
-                                                                <Text style={{ color: "#334155" }}>
-                                                                    Bordadura: {o.totalBordadura ?? 0} —{" "}
-                                                                    {(o.porcentagemBordadura ?? 0).toFixed(2)}%
+                                                            <View>
+                                                                <Text style={styles.organDetail}>
+                                                                    Bord: {o.totalBordadura ?? 0} ({(o.porcentagemBordadura ?? 0).toFixed(2)}%)
                                                                 </Text>
-                                                                <Text style={{ color: "#334155" }}>
-                                                                    Área interna: {o.totalArea ?? 0} —{" "}
-                                                                    {(o.porcentagemArea ?? 0).toFixed(2)}%
+                                                                <Text style={styles.organDetail}>
+                                                                    Área: {o.totalArea ?? 0} ({(o.porcentagemArea ?? 0).toFixed(2)}%)
                                                                 </Text>
-                                                                <Text style={{ color: "#334155" }}>
+                                                                <Text style={[styles.organDetail, {fontWeight: 'bold'}]}>
                                                                     Média: {(o.porcentagemMedia ?? 0).toFixed(2)}%
                                                                 </Text>
-                                                            </>
+                                                            </View>
                                                         )}
                                                     </View>
                                                 ))}
@@ -201,63 +181,38 @@ export const RenderFooter = ({
                             )}
                         </View>
                     </ErrorBoundary>
-                )}
-            </View>
-            )}
-           
-
-
-
-
-            <View style={styles.buttonContainer}>
-                <View
-                    style={{
-                        flexDirection: "row",
-                        flexWrap: "wrap",
-                        justifyContent: "center",
-                        marginBottom: 12,
-                    }}
-                >
-                    {plantas.map((p) => {
-                        const temDados = plantasComDados.includes(p);
-                        return (
-                            <Pressable
-                                key={p}
-                                onPress={() => temDados && togglePlantaSelecionada(p)}
-                                disabled={!temDados}
-                                style={({ pressed }) => [
-                                    styles.plantaSelecionadaButton,
-                                    {
-                                        backgroundColor: !temDados
-                                            ? "#e2e8f0"
-                                            : plantasSelecionadas.includes(p)
-                                                ? "#10b981"
-                                                : "#f1f5f9",
-                                        borderColor: !temDados
-                                            ? "#cbd5e1"
-                                            : plantasSelecionadas.includes(p)
-                                                ? "#059669"
-                                                : "#cbd5e1",
-                                        opacity: pressed ? 0.7 : 1,
-                                    },
-                                ]}
-                            >
-                                <Text
-                                    style={{
-                                        fontWeight: "600",
-                                        color:
-                                            temDados && plantasSelecionadas.includes(p)
-                                                ? "#fff"
-                                                : "#334155",
-                                    }}
-                                >
-                                    P{p}
-                                </Text>
-                            </Pressable>
-                        );
-                    })}
                 </View>
+            )}
 
+            <View style={styles.plantGrid}>
+                {plantas.map((p) => {
+                    const temDados = plantasComDados.includes(p);
+                    const isSelected = plantasSelecionadas.includes(p);
+                    return (
+                        <Pressable
+                            key={p}
+                            onPress={() => temDados && togglePlantaSelecionada(p)}
+                            disabled={!temDados}
+                            style={({ pressed }) => [
+                                styles.plantButton,
+                                !temDados && styles.plantButtonDisabled,
+                                isSelected && styles.plantButtonSelected,
+                                pressed && styles.plantButtonPressed
+                            ]}
+                        >
+                            <Text style={[
+                                styles.plantButtonText,
+                                isSelected && styles.plantButtonTextSelected,
+                                !temDados && styles.plantButtonTextDisabled
+                            ]}>
+                                P{p}
+                            </Text>
+                        </Pressable>
+                    );
+                })}
+            </View>
+
+            <View style={styles.actionButtons}>
                 <Pressable
                     onPress={async () => {
                         await salvarAvaliacoes(avaliacoes, lote);
@@ -265,13 +220,16 @@ export const RenderFooter = ({
                         setResetKey((prevKey) => prevKey + 1);
                     }}
                     style={({ pressed }) => [
-                        styles.button,
-                        { backgroundColor: "#3b82f6" },
+                        styles.primaryButton,
+                        { backgroundColor: "#2563EB" }, 
                         pressed && styles.buttonPressed,
+                        isSaving && styles.buttonDisabled
                     ]}
                     disabled={isSaving}
                 >
-                    <Text style={styles.buttonText}>💾 Salvar Dados do Lote {lote}</Text>
+                    <Text style={styles.primaryButtonText}>
+                        {isSaving ? "Salvando..." : `💾 Salvar Lote ${lote}`}
+                    </Text>
                 </Pressable>
 
                 <Pressable
@@ -279,69 +237,165 @@ export const RenderFooter = ({
                         try {
                             await gerarRelatorioDoLote(lote, doencasPragas, nomeAvaliador);
                         } catch (error) {
-                            console.error("Erro ao gerar relatório:", error);
-                            Alert.alert("Erro", "Não foi possível gerar o relatório.");
+                            Alert.alert("Erro", "Falha ao gerar relatório.");
                         }
                     }}
                     style={({ pressed }) => [
-                        styles.button,
+                        styles.primaryButton,
+                        { backgroundColor: "#059669" }, 
                         pressed && styles.buttonPressed,
+                        isSaving && styles.buttonDisabled
                     ]}
                     disabled={isSaving}
                 >
-                    <Text style={styles.buttonText}>Gerar Relatório</Text>
+                    <Text style={styles.primaryButtonText}>📄 Gerar PDF</Text>
                 </Pressable>
             </View>
-        </>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
-    buttonContainer: {
-        marginTop: 24,
-        marginBottom: 40,
-        gap: 12,
+    footerContainer: {
+        paddingVertical: 20,
+    },
+    
+    secondaryButton: {
+        alignSelf: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#000',
+        marginBottom: 16,
+        backgroundColor: '#fff',
+    },
+    secondaryButtonText: {
+        color: '#000',
+        fontWeight: '600',
+        fontSize: 14,
     },
 
-    summaryCard: {
-        backgroundColor: "#ffffff",
-        padding: 18,
-        borderRadius: 14,
+    summaryContainer: {
         marginBottom: 20,
+    },
+    summaryCard: {
+        backgroundColor: "#FFFFFF",
+        padding: 16,
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#e2e8f0",
+        borderColor: "#E5E7EB",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
+        shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
     },
-    summaryTitle: {},
+    summaryHeader: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: "#000",
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    emptyText: {
+        color: "#6B7280",
+        textAlign: 'center',
+        fontStyle: 'italic',
+    },
+    summaryItem: {
+        marginBottom: 12,
+        paddingBottom: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    summaryItemTitle: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "#000",
+        marginBottom: 4,
+    },
+    organRow: {
+        marginLeft: 8,
+        marginTop: 4,
+    },
+    organName: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#374151",
+    },
+    organDetail: {
+        fontSize: 13,
+        color: "#4B5563",
+        marginLeft: 10,
+    },
 
-    button: {
-        padding: 18,
-        borderRadius: 14,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
-        elevation: 5,
-        backgroundColor: "#10b981",
+    plantGrid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        gap: 8,
+        marginBottom: 24,
+    },
+    plantButton: {
+        width: 45,
+        height: 45,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#fff',
         borderWidth: 1,
-        borderColor: "#059669",
+        borderColor: '#D1D5DB',
     },
-    buttonText: {},
-    buttonPressed: {
-        transform: [{ scale: 0.98 }],
-        opacity: 0.9,
+    plantButtonDisabled: {
+        backgroundColor: '#F3F4F6',
+        borderColor: '#E5E7EB',
+    },
+    plantButtonSelected: {
+        backgroundColor: '#000', 
+        borderColor: '#000',
+    },
+    plantButtonPressed: {
+        opacity: 0.7,
+    },
+    plantButtonText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#374151',
+    },
+    plantButtonTextSelected: {
+        color: '#fff',
+    },
+    plantButtonTextDisabled: {
+        color: '#9CA3AF',
+        fontWeight: 'normal',
     },
 
-    plantaSelecionadaButton: {
-        paddingVertical: 8,
-        paddingHorizontal: 14,
-        margin: 4,
-        borderRadius: 20,
-        borderWidth: 2,
-        alignItems: "center",
+    actionButtons: {
+        gap: 12,
+        marginBottom: 20,
     },
+    primaryButton: {
+        paddingVertical: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 3,
+    },
+    primaryButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    buttonPressed: {
+        opacity: 0.9,
+        transform: [{ scale: 0.98 }],
+    },
+    buttonDisabled: {
+        backgroundColor: '#9CA3AF',
+    }
 });

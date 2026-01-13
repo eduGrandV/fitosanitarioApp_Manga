@@ -7,7 +7,7 @@ export type Registro = {
   quadrante?: string;
   ramo?: string;
   local?: string | PontoLocalizacao;
-  numeroLocal?: number | null; 
+  numeroLocal?: number | null;
   nota?: number;
   lote: string;
   centroCusto: string;
@@ -63,6 +63,7 @@ export type PontoLocalizacao = {
   latitude: number;
   longitude: number;
   timestamp: number;
+  accuracy: number | undefined;
 };
 
 // Dados Constantes
@@ -72,6 +73,7 @@ export const ramos = ["R1", "R2"];
 export const quadrantes = ["Q1", "Q2", "Q3", "Q4"];
 
 export const locaPlanta: LocalPlantaItem[] = [
+  //  FORTALEZA F1 
   { id: 1, name: "GV-F1 MANGA TOMMY 01", centroCusto: "1.5.1.01.01" },
   { id: 2, name: "GV-F1 MANGA PALMER 02", centroCusto: "1.5.1.01.02" },
   { id: 3, name: "GV-F1 MANGA PALMER 03", centroCusto: "1.5.1.01.03" },
@@ -99,6 +101,8 @@ export const locaPlanta: LocalPlantaItem[] = [
   { id: 25, name: "GV-F1 MANGA KENT 32", centroCusto: "1.5.1.01.25" },
   { id: 26, name: "GV-F1 MANGA KENT 33", centroCusto: "1.5.1.01.26" },
   { id: 27, name: "GV-F1 MANGA KENT 34", centroCusto: "1.5.1.01.27" },
+
+  //  FORTALEZA F2 
   { id: 28, name: "GV-F2 MANGA TOMMY 22.1", centroCusto: "1.5.1.02.01" },
   { id: 29, name: "GV-F2 MANGA PALMER 22.2", centroCusto: "1.5.1.02.02" },
   { id: 30, name: "GV-F2 MANGA TOMMY 23", centroCusto: "1.5.1.02.03" },
@@ -108,9 +112,96 @@ export const locaPlanta: LocalPlantaItem[] = [
   { id: 34, name: "GV-F2 MANGA KEITT 28", centroCusto: "1.5.1.02.07" },
   { id: 35, name: "GV-F2 MANGA KEITT 29", centroCusto: "1.5.1.02.08" },
   { id: 36, name: "GV-F2 MANGA KEITT 30", centroCusto: "1.5.1.02.09" },
+
+  //  FORTALEZA F3
   { id: 37, name: "GV-F3 MANGA KEITT 20", centroCusto: "1.5.1.03.01" },
   { id: 38, name: "GV-F3 MANGA PALMER 21", centroCusto: "1.5.1.03.02" },
+
+  // --- FORTALEZA F5 ---
+  { id: 39, name: "GV-F5.MANGA.KEITT.01.2", centroCusto: "1.5.1.05.01" },
+  { id: 40, name: "GV-F5.MANGA.KEITT.02.4", centroCusto: "1.5.1.05.02" },
+  { id: 41, name: "GV-F5.MANGA.KEITT.03.3", centroCusto: "1.5.1.05.03" },
+  { id: 42, name: "GV-F5.MANGA.KENT.01.3",  centroCusto: "1.5.1.05.04" },
+  { id: 43, name: "GV-F5.MANGA.PALMER.01.6", centroCusto: "1.5.1.05.05" },
+
+  //  BOA ESPERANÇA 
+  { id: 44, name: "GV-BE.PALMER.01", centroCusto: "8.4.1.01.01" },
+  { id: 45, name: "GV-BE.PALMER.02", centroCusto: "8.4.1.01.02" },
+  { id: 46, name: "GV-BE.PALMER.03", centroCusto: "8.4.1.01.03" },
+  { id: 47, name: "GV-BE.PALMER.04", centroCusto: "8.4.1.01.04" },
+  { id: 48, name: "GV-BE.PALMER.05", centroCusto: "8.4.1.01.05" },
+  { id: 49, name: "GV-BE.PALMER.06", centroCusto: "8.4.1.01.06" },
+  { id: 50, name: "GV-BE.PALMER.07", centroCusto: "8.4.1.01.07" },
+  { id: 51, name: "GV-BE.PALMER.08", centroCusto: "8.4.1.01.08" },
+  { id: 52, name: "GV-BE.PALMER.09", centroCusto: "8.4.1.01.09" },
+  { id: 53, name: "GV-BE.PALMER.10", centroCusto: "8.4.1.01.10" },
+  { id: 54, name: "GV-BE.PALMER.11", centroCusto: "8.4.1.01.11" },
+  { id: 55, name: "GV-BE.PALMER.12", centroCusto: "8.4.1.01.12" },
+  { id: 56, name: "GV-BE.PALMER.13", centroCusto: "8.4.1.01.13" },
+  { id: 57, name: "GV-BE.PALMER.14", centroCusto: "8.4.1.01.14" },
+  { id: 58, name: "GV-BE.PALMER.15", centroCusto: "8.4.1.01.15" },
+  { id: 59, name: "GV-BE.PALMER.16", centroCusto: "8.4.1.01.16" },
+  { id: 60, name: "GV-BE.PALMER.17", centroCusto: "8.4.1.01.17" },
+  { id: 61, name: "GV-BE.MANGA.PRODUTIVA", centroCusto: "8.4.1.02.01" },
+
+  // VALE SERRA
+   
+  // Manga Palmer
+  { id: 62, name: "GV-VS.MANGA.PALMER.01", centroCusto: "9.4.1.01.01" },
+  { id: 63, name: "GV-VS.MANGA.PALMER.02", centroCusto: "9.4.1.01.02" },
+  { id: 64, name: "GV-VS.MANGA.PALMER.03", centroCusto: "9.4.1.01.03" },
+  { id: 65, name: "GV-VS.MANGA.PALMER.04", centroCusto: "9.4.1.01.04" },
+  // Manga Keitt 01
+  { id: 66, name: "GV-VS.MANGA.KEITT.01", centroCusto: "9.4.1.01.05" },
+  // Manga Tommy
+  { id: 67, name: "GV-VS.MANGA.TOMMY.01", centroCusto: "9.4.1.01.06" },
+  { id: 68, name: "GV-VS.MANGA.TOMMY.02", centroCusto: "9.4.1.01.07" },
+  // Manga Kent
+  { id: 69, name: "GV-VS.MANGA.KENT.01", centroCusto: "9.4.1.01.08" },
+  { id: 70, name: "GV-VS.MANGA.KENT.02", centroCusto: "9.4.1.01.09" },
+  { id: 71, name: "GV-VS.MANGA.KENT.03", centroCusto: "9.4.1.01.10" },
+  { id: 72, name: "GV-VS.MANGA.KENT.04", centroCusto: "9.4.1.01.11" },
+  { id: 73, name: "GV-VS.MANGA.KENT.05", centroCusto: "9.4.1.01.12" },
+  { id: 74, name: "GV-VS.MANGA.KENT.06", centroCusto: "9.4.1.01.13" },
+  { id: 75, name: "GV-VS.MANGA.KENT.07", centroCusto: "9.4.1.01.14" },
+  { id: 76, name: "GV-VS.MANGA.KENT.08", centroCusto: "9.4.1.01.15" },
+  { id: 77, name: "GV-VS.MANGA.KENT.09", centroCusto: "9.4.1.01.16" },
+  { id: 78, name: "GV-VS.MANGA.KENT.10", centroCusto: "9.4.1.01.17" },
+  { id: 79, name: "GV-VS.MANGA.KENT.11", centroCusto: "9.4.1.01.18" },
+  { id: 80, name: "GV-VS.MANGA.KENT.12", centroCusto: "9.4.1.01.19" },
+  { id: 81, name: "GV-VS.MANGA.KENT.13", centroCusto: "9.4.1.01.20" },
+  { id: 82, name: "GV-VS.MANGA.KENT.14", centroCusto: "9.4.1.01.21" },
+  // Manga Keitt 02-09
+  { id: 83, name: "GV-VS.MANGA.KEITT.02", centroCusto: "9.4.1.01.22" },
+  { id: 84, name: "GV-VS.MANGA.KEITT.03", centroCusto: "9.4.1.01.23" },
+  { id: 85, name: "GV-VS.MANGA.KEITT.04", centroCusto: "9.4.1.01.24" },
+  { id: 86, name: "GV-VS.MANGA.KEITT.05", centroCusto: "9.4.1.01.25" },
+  { id: 87, name: "GV-VS.MANGA.KEITT.06", centroCusto: "9.4.1.01.26" },
+  { id: 88, name: "GV-VS.MANGA.KEITT.07", centroCusto: "9.4.1.01.27" },
+  { id: 89, name: "GV-VS.MANGA.KEITT.08", centroCusto: "9.4.1.01.28" },
+  { id: 90, name: "GV-VS.MANGA.KEITT.09", centroCusto: "9.4.1.01.29" },
+  // Goiaba
+  { id: 91, name: "GV-VS.GOIABA.PALUMA.01", centroCusto: "9.4.1.02.01" },
+  { id: 92, name: "GV-VS.GOIABA.PALUMA.02", centroCusto: "9.4.1.02.02" },
+  { id: 93, name: "GV-VS.GOIABA.PALUMA.03", centroCusto: "9.4.1.02.03" },
+  { id: 94, name: "GV-VS.GOIABA.PALUMA.04", centroCusto: "9.4.1.02.04" },
+  { id: 95, name: "GV-VS.GOIABA.PALUMA.05", centroCusto: "9.4.1.02.05" },
+  { id: 96, name: "GV-VS.GOIABA.PALUMA.06", centroCusto: "9.4.1.02.06" },
+  // Abacate Serra I
+  { id: 97, name: "GV-VS.ABACATE.HASS.01",    centroCusto: "9.4.1.03.01" },
+  { id: 98, name: "GV-VS.ABACATE.QUINTAL.01", centroCusto: "9.4.1.03.02" },
+  { id: 99, name: "GV-VS.ABACATE.GEADA.01",   centroCusto: "9.4.1.03.03" },
+  { id: 100, name: "GV-VS.ABACATE.HASS.02",   centroCusto: "9.4.1.03.04" },
+  { id: 101, name: "GV-VS.ABACATE.HASS.03",   centroCusto: "9.4.1.03.05" },
+  { id: 102, name: "GV-VS.ABACATE.HASS.04",   centroCusto: "9.4.1.03.06" },
+
+
+  
+  // Produtiva Geral
+  { id: 103, name: "GV-VS.MANGA.PRODUTIVA",   centroCusto: "9.4.1.04.01" },
 ];
+
+
 
 export const doencasPragas: DoencaPraga[] = [
   {

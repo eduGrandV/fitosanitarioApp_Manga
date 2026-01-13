@@ -21,14 +21,11 @@ export const salvarAvaliacoes = async (
   try {
     const chaveAvaliacoes = `${CHAVE_BASE}_${lote}`;
 
-    // 1. LER os dados que já existem
     const dadosAntigosJSON = await AsyncStorage.getItem(chaveAvaliacoes);
     const dadosAntigos: Registro[] = dadosAntigosJSON ? JSON.parse(dadosAntigosJSON) : [];
 
-    // 2. COMBINAR os dados
     const todosOsDados = [...dadosAntigos, ...novasAvaliacoes]
 
-    // 3. SALVAR o array combinado
     await AsyncStorage.setItem(chaveAvaliacoes, JSON.stringify(todosOsDados));
 
     console.log("Dados combinados foram salvos com sucesso.");
@@ -40,7 +37,6 @@ export const salvarAvaliacoes = async (
 };
 
 
-
 export const carregarDadosCompletos = async (
   lote: string,
   setAvaliacoes: (avaliacoes: Registro[]) => void
@@ -50,10 +46,8 @@ export const carregarDadosCompletos = async (
     const jsonAvaliacoes = await AsyncStorage.getItem(chaveAvaliacoes);
     const dadosAvaliacoes: Registro[] = jsonAvaliacoes ? JSON.parse(jsonAvaliacoes) : [];
 
-    // Atualiza estado React (caso você use em tela)
     setAvaliacoes(dadosAvaliacoes);
 
-    //  Agrupar por planta
     const plantasAgrupadas = Object.values(
       dadosAvaliacoes.reduce((acc: Record<string, any>, registro) => {
         if (!acc[registro.planta]) {
@@ -73,19 +67,17 @@ export const carregarDadosCompletos = async (
       }, {})
     );
 
-    //  Calcular médias de notas por planta
     plantasAgrupadas.forEach((p: any) => {
       const notas = p.avaliacoes.map((a: any) => a.nota);
       p.mediaNotas =
         notas.length > 0 ? notas.reduce((s: number, n: number) => s + n, 0) / notas.length : 0;
     });
 
-    //  Retorna o agrupamento para o gerarPDF
     return plantasAgrupadas;
 
   } catch (e) {
     console.error("Erro ao carregar dados de avaliações:", e);
-    return []; //  Retorna array vazio para evitar erros downstream
+    return []; 
   }
 };
 
@@ -121,8 +113,8 @@ export default function BotaoApagarEspecifico({ lote, planta, setAvaliacoes }: P
       setSenha('');
     }
   };
-
-  return (
+ 
+  return ( 
     <View>
       <Pressable
         onPress={() => setModalVisible(true)}
@@ -158,10 +150,3 @@ export default function BotaoApagarEspecifico({ lote, planta, setAvaliacoes }: P
     </View>
   );
 }
-
-
-
-
-
-
-
