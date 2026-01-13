@@ -1,10 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
-import { Alert, Pressable, StyleSheet, Text, View, ActivityIndicator, StatusBar } from "react-native";
-import NetInfo from '@react-native-community/netinfo';
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+  StatusBar,
+} from "react-native";
+import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Importe seus serviços e tipos
 import { Registro } from "../../data/daodaAvaliacao";
 import { SincronizarBanco } from "../../services/api";
 
@@ -12,12 +19,13 @@ export default function UpdateScreen() {
   const [loading, setLoading] = useState(false);
   const [qtdPendentes, setQtdPendentes] = useState(0);
 
-  // Carrega a quantidade de registros pendentes ao abrir a tela
   const carregarPendencias = useCallback(async () => {
     try {
       const allKeys = await AsyncStorage.getAllKeys();
-      const keysAvaliacoes = allKeys.filter(key => key.startsWith('@avaliacoes_'));
-      
+      const keysAvaliacoes = allKeys.filter((key) =>
+        key.startsWith("@avaliacoes_")
+      );
+
       let total = 0;
       for (const chave of keysAvaliacoes) {
         const item = await AsyncStorage.getItem(chave);
@@ -38,7 +46,7 @@ export default function UpdateScreen() {
 
   const handleSync = async () => {
     if (loading) return;
-    
+
     if (qtdPendentes === 0) {
       Alert.alert("Tudo certo!", "Não há novos registros para sincronizar.");
       return;
@@ -47,18 +55,16 @@ export default function UpdateScreen() {
     setLoading(true);
 
     try {
-      // 1. Verifica conexão Wi-Fi (Requisito de segurança/dados)
       const state = await NetInfo.fetch();
-      if (!state.isConnected || state.type !== 'wifi') {
+      if (!state.isConnected || state.type !== "wifi") {
         Alert.alert(
-          '⚠️ Conexão Exigida', 
-          'Para economizar dados móveis, a sincronização só é permitida via Wi-Fi.'
+          "⚠️ Conexão Exigida",
+          "Para economizar dados móveis, a sincronização só é permitida via Wi-Fi."
         );
         return;
       }
 
       await sincronizarTodosLotes();
-
     } finally {
       setLoading(false);
     }
@@ -67,7 +73,9 @@ export default function UpdateScreen() {
   const sincronizarTodosLotes = async () => {
     try {
       const allKeys = await AsyncStorage.getAllKeys();
-      const keysAvaliacoes = allKeys.filter(key => key.startsWith('@avaliacoes_'));
+      const keysAvaliacoes = allKeys.filter((key) =>
+        key.startsWith("@avaliacoes_")
+      );
 
       let todasAvaliacoes: Registro[] = [];
       for (const chave of keysAvaliacoes) {
@@ -80,28 +88,29 @@ export default function UpdateScreen() {
       const sucesso = await SincronizarBanco(todasAvaliacoes);
 
       if (sucesso) {
-        // Limpa o banco local
         for (const chave of keysAvaliacoes) {
           await AsyncStorage.removeItem(chave);
         }
-        // Atualiza o contador na tela
         setQtdPendentes(0);
-        Alert.alert('✅ Sucesso', 'Todos os dados foram enviados para a nuvem!');
+        Alert.alert(
+          "✅ Sucesso",
+          "Todos os dados foram enviados para a nuvem!"
+        );
       }
-
     } catch (error: any) {
       console.error(error);
-      Alert.alert("❌ Erro no Envio", `Falha ao conectar com o servidor.\n${error.message}`);
+      Alert.alert(
+        "❌ Erro no Envio",
+        `Falha ao conectar com o servidor.\n${error.message}`
+      );
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
-      
+
       <View style={styles.content}>
-        
-        {/* ÍCONE DE CABEÇALHO */}
         <View style={styles.iconContainer}>
           <Text style={{ fontSize: 40 }}>☁️</Text>
         </View>
@@ -114,27 +123,31 @@ export default function UpdateScreen() {
         {/* CARD DE STATUS */}
         <View style={styles.statusCard}>
           <Text style={styles.statusLabel}>Registros Pendentes</Text>
-          <Text style={[styles.statusValue, { color: qtdPendentes > 0 ? '#ef4444' : '#10b981' }]}>
+          <Text
+            style={[
+              styles.statusValue,
+              { color: qtdPendentes > 0 ? "#ef4444" : "#10b981" },
+            ]}
+          >
             {qtdPendentes}
           </Text>
           <Text style={styles.statusHelper}>
-            {qtdPendentes > 0 
-              ? "Você possui dados não salvos na nuvem." 
+            {qtdPendentes > 0
+              ? "Você possui dados não salvos na nuvem."
               : "Seu dispositivo está atualizado."}
           </Text>
         </View>
 
-        {/* CARD DE AVISO WI-FI */}
         <View style={styles.warningContainer}>
           <Text style={styles.warningIcon}>⚠️</Text>
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             <Text style={styles.warningTitle}>Requer Wi-Fi</Text>
             <Text style={styles.warningText}>
-              Para evitar consumo excessivo do seu plano de dados, conecte-se a uma rede Wi-Fi.
+              Para evitar consumo excessivo do seu plano de dados, conecte-se a
+              uma rede Wi-Fi.
             </Text>
           </View>
         </View>
-
       </View>
 
       {/* BOTÃO DE AÇÃO NO RODAPÉ */}
@@ -145,7 +158,7 @@ export default function UpdateScreen() {
           style={({ pressed }) => [
             styles.button,
             (loading || qtdPendentes === 0) && styles.buttonDisabled,
-            pressed && styles.buttonPressed
+            pressed && styles.buttonPressed,
           ]}
         >
           {loading ? (
@@ -164,7 +177,7 @@ export default function UpdateScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc", // Slate-50 (fundo bem claro)
+    backgroundColor: "#f8fafc",
   },
   content: {
     flex: 1,
@@ -172,34 +185,33 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  
+
   // Cabeçalho
   iconContainer: {
     width: 80,
     height: 80,
-    backgroundColor: "#eff6ff", // Azul bem claro
+    backgroundColor: "#eff6ff",
     borderRadius: 40,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#dbeafe"
+    borderColor: "#dbeafe",
   },
   title: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#1e293b", // Slate-800
+    color: "#1e293b",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#64748b", // Slate-500
+    color: "#64748b",
     textAlign: "center",
     marginBottom: 32,
     lineHeight: 22,
   },
 
-  // Card de Status (Contador)
   statusCard: {
     width: "100%",
     backgroundColor: "#ffffff",
@@ -207,14 +219,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     marginBottom: 24,
-    // Sombra suave
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 3,
     borderWidth: 1,
-    borderColor: "#f1f5f9"
+    borderColor: "#f1f5f9",
   },
   statusLabel: {
     fontSize: 14,
@@ -234,14 +245,13 @@ const styles = StyleSheet.create({
     color: "#64748b",
   },
 
-  // Aviso Wi-Fi
   warningContainer: {
     flexDirection: "row",
-    backgroundColor: "#fffbeb", // Amber-50
+    backgroundColor: "#fffbeb",
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#fcd34d", // Amber-300
+    borderColor: "#fcd34d",
     alignItems: "center",
     width: "100%",
   },
@@ -251,17 +261,16 @@ const styles = StyleSheet.create({
   },
   warningTitle: {
     fontWeight: "bold",
-    color: "#b45309", // Amber-700
+    color: "#b45309",
     marginBottom: 2,
-    fontSize: 15
+    fontSize: 15,
   },
   warningText: {
     fontSize: 13,
-    color: "#92400e", // Amber-800
-    lineHeight: 18
+    color: "#92400e",
+    lineHeight: 18,
   },
 
-  // Rodapé e Botão
   footer: {
     padding: 24,
     borderTopWidth: 1,
@@ -272,7 +281,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 56,
     borderRadius: 12,
-    backgroundColor: "#2563EB", // Azul Royal moderno
+    backgroundColor: "#2563EB",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#2563EB",
@@ -283,10 +292,10 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.9,
-    transform: [{ scale: 0.98 }]
+    transform: [{ scale: 0.98 }],
   },
   buttonDisabled: {
-    backgroundColor: "#94a3b8", // Cinza desabilitado
+    backgroundColor: "#94a3b8",
     shadowOpacity: 0,
     elevation: 0,
   },
