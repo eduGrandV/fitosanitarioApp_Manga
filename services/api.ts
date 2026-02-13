@@ -1,47 +1,44 @@
-import { Alert } from "react-native";
-import { Registro } from "../data/daodaAvaliacao";
+const BASE_URL_EMULADOR = "http://10.0.2.2:3004/api";
 
-export const SincronizarBanco = async (avaliacoes: Registro[]) => {
+const BASE_URL_FISICO = "http://192.168.253.18:3005/api";
+
+
+const BASE_URL = BASE_URL_FISICO;
+
+const post = async (endpoint: string, dados: any) => {
   try {
-    const response = await fetch("http://192.168.253.9:3001/plantas/post", {
+    const url = `${BASE_URL}${endpoint}`;
+    console.log(`📡 Enviando para: ${url}`);
+
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(
-        avaliacoes.map((av) => ({
-          planta: av.planta,
-          lote: av.lote,
-          doencaOuPraga: av.doencaOuPraga,
-          orgao: av.orgao,
-          quadrante: av.quadrante || null,
-          ramo: av.ramo || null,
-          numeroLocal: av.numeroLocal || null,
-          local:
-            typeof av.local === "object" && av.local !== null
-              ? { latitude: av.local.latitude, longitude: av.local.longitude } 
-              : null,
-          nota: av.nota,
-          centroCusto: av.centroCusto,
-          nomeAvaliador: av.nomeAvaliador,
-        }))
-      ),
+      body: JSON.stringify(dados),
     });
+
     if (!response.ok) {
-      throw new Error(`Erro ao enviar Dados: ${response.statusText}`);
+      const erroTexto = await response.text();
+      throw new Error(`Erro ${response.status}: ${erroTexto}`);
     }
 
-    const dados = await response.json();
-    Alert.alert(
-      "✅ Sucesso",
-      "Todas as avaliações foram enviadas para o servidor!"
-    );
-    return dados;
-  } catch (error: any) {
-    console.error("erro na sincronização:  ", error),
-      Alert.alert(
-        "❌ Falha",
-        `Não foi possível enviar os dados: ${error.message}`
-      );
+    return await response.json();
+  } catch (error) {
+    throw error;
   }
+};
+
+export const ApiService = {
+  sincronizarPacote: async (listaPacotes: any[]) => {
+    return await post("/sincronizar-pacote", listaPacotes);
+  },
+
+  sincronizarRelatorio: async (dados: any) => {
+    return await post("/sincronizar-relatorio", dados);
+  },
+
+  sincronizarAvaliacoes: async (dados: any) => {
+    return await post("/sincronizar", dados);
+  },
 };

@@ -6,36 +6,39 @@ export const useResumoPlanta = (
   plantaSelecionada: number,
   lote: string,
   centroCustoSelecionado: string,
-  qtdePlantas: number
+  qtdePlantas: number,
 ) => {
   const resumoDaPlanta = useMemo(() => {
     const calcularResumoPlanta = (
       plantaNumero: number,
-      cc: string
+      cc: string,
     ): ItemResumo[] => {
       return doencasPragas.map((item) => {
         const registrosItem = avaliacoes.filter(
           (a) =>
             a.planta === plantaNumero &&
             a.doencaOuPraga === item.nome &&
-            a.centroCusto === cc
+            a.centroCusto === cc,
         );
 
         const orgaos = item.orgaos.map((o) => {
           const registrosOrgao = registrosItem.filter(
-            (r) => r.orgao === o.nome
+            (r) => r.orgao === o.nome,
           );
-          const notasUnicas: Record<string, number> = {};
-          registrosOrgao.forEach((r) => {
-            const key = `${r.quadrante || "SemQ"}-${r.ramo || "SemR"}-${
-              r.identificadorDeLocal || "SemL"
-            }-${r.numeroLocal || "SemN"}`;
-            notasUnicas[key] = r.nota ?? 0;
-          });
-          const totalNotas = Object.values(notasUnicas).reduce(
-            (s, n) => s + n,
-            0
-          );
+          let totalNotas = 0;
+
+          if (item.tipo === "doenca") {
+            const notasUnicas: Record<string, number> = {};
+
+            registrosOrgao.forEach((r) => {
+              const key = `${r.quadrante || "SemQ"}-${r.ramo || "SemR"}-${
+                r.identificadorDeLocal || "SemL"
+              }-${r.numeroLocal || "SemN"}`;
+              notasUnicas[key] = r.nota ?? 0;
+            });
+
+            totalNotas = Object.values(notasUnicas).reduce((s, n) => s + n, 0);
+          }
 
           if (item.tipo === "doenca") {
             const isFolha = o.nome.toUpperCase().includes("FOLHA");
@@ -52,16 +55,17 @@ export const useResumoPlanta = (
           } else {
             const bordaduraNotas = registrosOrgao
               .filter((r) => r.identificadorDeLocal === "Bordadura")
-              .map((r) => Number(r.nota ?? 0));
+              .map(() => 1);
+
             const areaNotas = registrosOrgao
               .filter(
-                (r) => r.identificadorDeLocal === "Área interna da parcela"
+                (r) => r.identificadorDeLocal === "Área interna da parcela",
               )
-              .map((r) => Number(r.nota ?? 0));
+              .map(() => 1);
+
             const totalBordadura = bordaduraNotas.reduce((s, n) => s + n, 0);
             const totalArea = areaNotas.reduce((s, n) => s + n, 0);
 
-            // Lógica baseada na quantidade de plantas (10, 14 ou 18)
             let maxBordadura = 4,
               maxArea = 6;
             if (qtdePlantas === 14) {

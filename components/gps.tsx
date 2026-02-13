@@ -9,13 +9,17 @@ export const localizacaoPadrao = {
 
 const criarPontoLocalizacao = (
   lote: string,
-  { latitude, longitude, accuracy }: { latitude: number; longitude: number; accuracy?: number }
+  {
+    latitude,
+    longitude,
+    accuracy,
+  }: { latitude: number; longitude: number; accuracy?: number },
 ): PontoLocalizacao => ({
   id: Date.now(),
   lote,
   latitude,
   longitude,
-  accuracy: accuracy ?? 0, 
+  accuracy: accuracy ?? 0,
   timestamp: Date.now(),
 });
 
@@ -32,38 +36,39 @@ export async function Gps() {
     longitude: loc.coords.longitude,
     altitude: loc.coords.altitude,
     accuracy: loc.coords.accuracy,
-    altitudeAccuracy: loc.coords.altitudeAccuracy, 
-    heading: loc.coords.heading, 
-    speed: loc.coords.speed, 
-    timestamp: loc.timestamp, 
+    altitudeAccuracy: loc.coords.altitudeAccuracy,
+    heading: loc.coords.heading,
+    speed: loc.coords.speed,
+    timestamp: loc.timestamp,
   };
 }
 
 export const obterLocalizacaoComTime = async (
   lote: string,
-  timeoutMs = 5000
+  timeoutMs = 5000,
 ): Promise<PontoLocalizacao> => {
-
   try {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      console.warn("Permissão de localização negada, usando coordenadas padrão.");
+      console.warn(
+        "Permissão de localização negada, usando coordenadas padrão.",
+      );
       return criarPontoLocalizacao(lote, {
-          ...localizacaoPadrao,
-          accuracy: 999 
+        ...localizacaoPadrao,
+        accuracy: 999,
       });
     }
 
     const posicaoPromise = Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Highest, 
+      accuracy: Location.Accuracy.Highest,
       mayShowUserSettingsDialog: false,
     });
 
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(
         () => reject(new Error("Timeout ao buscar localização")),
-        timeoutMs
-      )
+        timeoutMs,
+      ),
     );
 
     const posicao: any = await Promise.race([posicaoPromise, timeoutPromise]);
@@ -73,29 +78,28 @@ export const obterLocalizacaoComTime = async (
       longitude: posicao.coords.longitude,
       accuracy: posicao.coords.accuracy,
     });
-
   } catch (error) {
     console.warn("Erro ao obter localização atual:", error);
 
     try {
-        const ultimaPosicao = await Location.getLastKnownPositionAsync();
-        if (ultimaPosicao) {
-            console.log("Recuperada última localização válida (Cache)");
-            return criarPontoLocalizacao(lote, {
-                latitude: ultimaPosicao.coords.latitude,
-                longitude: ultimaPosicao.coords.longitude,
-                accuracy: ultimaPosicao.coords.accuracy ?? 0,
-            });
-        }
+      const ultimaPosicao = await Location.getLastKnownPositionAsync();
+      if (ultimaPosicao) {
+        console.log("Recuperada última localização válida (Cache)");
+        return criarPontoLocalizacao(lote, {
+          latitude: ultimaPosicao.coords.latitude,
+          longitude: ultimaPosicao.coords.longitude,
+          accuracy: ultimaPosicao.coords.accuracy ?? 0,
+        });
+      }
     } catch (cacheError) {
-        console.warn("Falha ao recuperar cache.");
+      console.warn("Falha ao recuperar cache.");
     }
 
     console.warn("Usando localização padrão fixa.");
     return criarPontoLocalizacao(lote, {
-        latitude: localizacaoPadrao.latitude,
-        longitude: localizacaoPadrao.longitude,
-        accuracy: 999, 
+      latitude: localizacaoPadrao.latitude,
+      longitude: localizacaoPadrao.longitude,
+      accuracy: 999,
     });
   }
 };

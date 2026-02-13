@@ -72,8 +72,17 @@ export const areaInterna = Array.from({ length: 6 }, (_, i) => i + 1);
 export const ramos = ["R1", "R2"];
 export const quadrantes = ["Q1", "Q2", "Q3", "Q4"];
 
+export const LISTA_FAZENDAS = [
+  { label: "Fortaleza 1 (F1)", valor: "GV-F1" },
+  { label: "Fortaleza 2 (F2)", valor: "GV-F2" },
+  { label: "Fortaleza 3 (F3)", valor: "GV-F3" },
+  { label: "Fortaleza 5 (F5)", valor: "GV-F5" },
+  { label: "Boa Esperança", valor: "GV-BE" },
+  { label: "Vale Serra", valor: "GV-VS" },
+];
+
 export const locaPlanta: LocalPlantaItem[] = [
-  //  FORTALEZA F1 
+  //  FORTALEZA F1
   { id: 1, name: "GV-F1 MANGA TOMMY 01", centroCusto: "1.5.1.01.01" },
   { id: 2, name: "GV-F1 MANGA PALMER 02", centroCusto: "1.5.1.01.02" },
   { id: 3, name: "GV-F1 MANGA PALMER 03", centroCusto: "1.5.1.01.03" },
@@ -102,7 +111,7 @@ export const locaPlanta: LocalPlantaItem[] = [
   { id: 26, name: "GV-F1 MANGA KENT 33", centroCusto: "1.5.1.01.26" },
   { id: 27, name: "GV-F1 MANGA KENT 34", centroCusto: "1.5.1.01.27" },
 
-  //  FORTALEZA F2 
+  //  FORTALEZA F2
   { id: 28, name: "GV-F2 MANGA TOMMY 22.1", centroCusto: "1.5.1.02.01" },
   { id: 29, name: "GV-F2 MANGA PALMER 22.2", centroCusto: "1.5.1.02.02" },
   { id: 30, name: "GV-F2 MANGA TOMMY 23", centroCusto: "1.5.1.02.03" },
@@ -121,10 +130,10 @@ export const locaPlanta: LocalPlantaItem[] = [
   { id: 39, name: "GV-F5.MANGA.KEITT.01.2", centroCusto: "1.5.1.05.01" },
   { id: 40, name: "GV-F5.MANGA.KEITT.02.4", centroCusto: "1.5.1.05.02" },
   { id: 41, name: "GV-F5.MANGA.KEITT.03.3", centroCusto: "1.5.1.05.03" },
-  { id: 42, name: "GV-F5.MANGA.KENT.01.3",  centroCusto: "1.5.1.05.04" },
+  { id: 42, name: "GV-F5.MANGA.KENT.01.3", centroCusto: "1.5.1.05.04" },
   { id: 43, name: "GV-F5.MANGA.PALMER.01.6", centroCusto: "1.5.1.05.05" },
 
-  //  BOA ESPERANÇA 
+  //  BOA ESPERANÇA
   { id: 44, name: "GV-BE.PALMER.01", centroCusto: "8.4.1.01.01" },
   { id: 45, name: "GV-BE.PALMER.02", centroCusto: "8.4.1.01.02" },
   { id: 46, name: "GV-BE.PALMER.03", centroCusto: "8.4.1.01.03" },
@@ -145,7 +154,7 @@ export const locaPlanta: LocalPlantaItem[] = [
   { id: 61, name: "GV-BE.MANGA.PRODUTIVA", centroCusto: "8.4.1.02.01" },
 
   // VALE SERRA
-   
+
   // Manga Palmer
   { id: 62, name: "GV-VS.MANGA.PALMER.01", centroCusto: "9.4.1.01.01" },
   { id: 63, name: "GV-VS.MANGA.PALMER.02", centroCusto: "9.4.1.01.02" },
@@ -188,20 +197,16 @@ export const locaPlanta: LocalPlantaItem[] = [
   { id: 95, name: "GV-VS.GOIABA.PALUMA.05", centroCusto: "9.4.1.02.05" },
   { id: 96, name: "GV-VS.GOIABA.PALUMA.06", centroCusto: "9.4.1.02.06" },
   // Abacate Serra I
-  { id: 97, name: "GV-VS.ABACATE.HASS.01",    centroCusto: "9.4.1.03.01" },
+  { id: 97, name: "GV-VS.ABACATE.HASS.01", centroCusto: "9.4.1.03.01" },
   { id: 98, name: "GV-VS.ABACATE.QUINTAL.01", centroCusto: "9.4.1.03.02" },
-  { id: 99, name: "GV-VS.ABACATE.GEADA.01",   centroCusto: "9.4.1.03.03" },
-  { id: 100, name: "GV-VS.ABACATE.HASS.02",   centroCusto: "9.4.1.03.04" },
-  { id: 101, name: "GV-VS.ABACATE.HASS.03",   centroCusto: "9.4.1.03.05" },
-  { id: 102, name: "GV-VS.ABACATE.HASS.04",   centroCusto: "9.4.1.03.06" },
+  { id: 99, name: "GV-VS.ABACATE.GEADA.01", centroCusto: "9.4.1.03.03" },
+  { id: 100, name: "GV-VS.ABACATE.HASS.02", centroCusto: "9.4.1.03.04" },
+  { id: 101, name: "GV-VS.ABACATE.HASS.03", centroCusto: "9.4.1.03.05" },
+  { id: 102, name: "GV-VS.ABACATE.HASS.04", centroCusto: "9.4.1.03.06" },
 
-
-  
   // Produtiva Geral
-  { id: 103, name: "GV-VS.MANGA.PRODUTIVA",   centroCusto: "9.4.1.04.01" },
+  { id: 103, name: "GV-VS.MANGA.PRODUTIVA", centroCusto: "9.4.1.04.01" },
 ];
-
-
 
 export const doencasPragas: DoencaPraga[] = [
   {

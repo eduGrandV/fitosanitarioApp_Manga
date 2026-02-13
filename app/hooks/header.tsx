@@ -4,24 +4,16 @@ import { useCallback, useMemo, useState } from "react";
 import {
   DoencaPraga,
   doencasPragas,
+  LISTA_FAZENDAS,
   locaPlanta,
   Registro,
 } from "../../data/daodaAvaliacao";
-
-const LISTA_FAZENDAS = [
-  { label: "Fortaleza 1 (F1)", valor: "GV-F1" },
-  { label: "Fortaleza 2 (F2)", valor: "GV-F2" },
-  { label: "Fortaleza 3 (F3)", valor: "GV-F3" },
-  { label: "Fortaleza 5 (F5)", valor: "GV-F5" },
-  { label: "Boa Esperança", valor: "GV-BE" },
-  { label: "Vale Serra", valor: "GV-VS" },
-];
 
 export const useAvaliacaoScreenState = (numeroDePlantas: number) => {
   const [avaliacoes, setAvaliacoes] = useState<Registro[]>([]);
   const [plantaSelecionada, setPlantaSelecionada] = useState<number>(1);
   const [filtroSelecionado, setFiltroSelecionado] = useState<string>(
-    doencasPragas[0].nome
+    doencasPragas[0].nome,
   );
   const [nomeAvaliador, setNomeAvaliador] = useState<string>("");
 
@@ -32,7 +24,7 @@ export const useAvaliacaoScreenState = (numeroDePlantas: number) => {
 
   const plantas = useMemo(
     () => Array.from({ length: numeroDePlantas }, (_, i) => i + 1),
-    [numeroDePlantas]
+    [numeroDePlantas],
   );
 
   const lotesFiltrados = useMemo(() => {
@@ -50,7 +42,7 @@ export const useAvaliacaoScreenState = (numeroDePlantas: number) => {
     setLocal(novoLocal);
     const itemSelecionado = locaPlanta.find((item) => item.name === novoLocal);
     setCentroCustoSelecionado(
-      itemSelecionado ? itemSelecionado.centroCusto : ""
+      itemSelecionado ? itemSelecionado.centroCusto : "",
     );
   }, []);
 
@@ -85,12 +77,12 @@ export const useAvaliacaoCallbacks = ({
 }) => {
   const handlePlantaChange = useCallback(
     (novaPlanta: number) => setPlantaSelecionada(novaPlanta),
-    [setPlantaSelecionada]
+    [setPlantaSelecionada],
   );
 
   const handleFiltroChange = useCallback(
     (novaDoenca: string) => setFiltroSelecionado(novaDoenca),
-    [setFiltroSelecionado]
+    [setFiltroSelecionado],
   );
 
   return { handlePlantaChange, handleFiltroChange };
@@ -134,7 +126,7 @@ export const RenderHeader = ({
 }: RenderHeaderProps) => {
   const itemSelecionado = useMemo(
     () => doencasPragas.find((d) => d.nome === filtroSelecionado),
-    [filtroSelecionado]
+    [filtroSelecionado],
   );
 
   return (

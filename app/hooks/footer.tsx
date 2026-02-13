@@ -1,29 +1,55 @@
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useCallback, useMemo, useState } from "react";
 
-import { doencasPragas, locaPlanta, Registro } from "../../data/daodaAvaliacao";
-import { salvarAvaliacoes } from "../../components/asyncStorage";
+import {
+  doencasPragas,
+  LISTA_FAZENDAS,
+  locaPlanta,
+  Registro,
+} from "../../data/daodaAvaliacao";
+import {
+  salvarAvaliacoes,
+  salvarPacoteOffline,
+  SincronizarIndicadores,
+} from "../../components/asyncStorage";
 import ErrorBoundary from "../../components/ErrorBoundary";
-import { gerarRelatorioDoLote } from "../../components/pdf";
+import { gerarRelatorioDoLote } from "../../services/pdf";
 
-export const useAvaliacaoScreenState = (
-  numeroDePlantas: number,
-  lote: string
-) => {
+export const useAvaliacaoScreenState = (numeroDePlantas: number) => {
   const [avaliacoes, setAvaliacoes] = useState<Registro[]>([]);
   const [plantaSelecionada, setPlantaSelecionada] = useState<number>(1);
   const [filtroSelecionado, setFiltroSelecionado] = useState<string>(
-    doencasPragas[0].nome
+    doencasPragas[0].nome,
   );
   const [nomeAvaliador, setNomeAvaliador] = useState<string>("");
+
+  const [fazendaSelecionada, setFazendaSelecionada] = useState<string>("");
   const [local, setLocal] = useState<string>();
   const [centroCustoSelecionado, setCentroCustoSelecionado] =
     useState<string>("");
 
   const plantas = useMemo(
     () => Array.from({ length: numeroDePlantas }, (_, i) => i + 1),
-    [numeroDePlantas]
+    [numeroDePlantas],
   );
+
+  const lotesFiltrados = useMemo(() => {
+    if (!fazendaSelecionada) return [];
+    return locaPlanta.filter((item) => item.name.includes(fazendaSelecionada));
+  }, [fazendaSelecionada]);
+
+  const handleFazendaChange = useCallback((novaFazenda: string) => {
+    setFazendaSelecionada(novaFazenda);
+    setLocal(undefined);
+    setCentroCustoSelecionado("");
+  }, []);
+
+  const handleLocalChange = useCallback((novoLocal: string) => {
+    setLocal(novoLocal);
+    const itemSelecionado = locaPlanta.find((item) => item.name === novoLocal);
+
+    setCentroCustoSelecionado(itemSelecionado ? itemSelecionado.name : "");
+  }, []);
 
   return {
     avaliacoes,
@@ -39,6 +65,11 @@ export const useAvaliacaoScreenState = (
     centroCustoSelecionado,
     setCentroCustoSelecionado,
     plantas,
+    handleLocalChange,
+    fazendaSelecionada,
+    handleFazendaChange,
+    lotesFiltrados,
+    listaFazendas: LISTA_FAZENDAS,
   };
 };
 
@@ -55,23 +86,23 @@ export const useAvaliacaoCallbacks = ({
 }) => {
   const handlePlantaChange = useCallback(
     (novaPlanta: number) => setPlantaSelecionada(novaPlanta),
-    [setPlantaSelecionada]
+    [setPlantaSelecionada],
   );
 
   const handleLocalChange = useCallback(
     (novoLocal: string) => {
       setLocal(novoLocal);
       const itemSelecionado = locaPlanta.find(
-        (item) => item.name === novoLocal
+        (item) => item.name === novoLocal,
       );
       setCentroCustoSelecionado(itemSelecionado?.centroCusto || "");
     },
-    [setLocal, setCentroCustoSelecionado]
+    [setLocal, setCentroCustoSelecionado],
   );
 
   const handleFiltroChange = useCallback(
     (novaDoenca: string) => setFiltroSelecionado(novaDoenca),
-    [setFiltroSelecionado]
+    [setFiltroSelecionado],
   );
 
   return { handlePlantaChange, handleLocalChange, handleFiltroChange };
@@ -90,6 +121,7 @@ interface RenderFooterProps {
   nomeAvaliador: string;
   isSaving: boolean;
   resumoDaPlanta: any[];
+  centroCustoSelecionado: string;
 }
 
 export const RenderFooter = ({
@@ -105,6 +137,7 @@ export const RenderFooter = ({
   nomeAvaliador,
   resumoDaPlanta,
   isSaving,
+  centroCustoSelecionado,
 }: RenderFooterProps) => {
   const [mostrarResumo, setMostrarResumo] = useState(false);
 
@@ -137,66 +170,60 @@ export const RenderFooter = ({
                   Nenhum dado registrado para esta planta.
                 </Text>
               ) : (
-                resumoDaPlanta
-                  .filter((item) =>
-                    item.orgaos?.some((o: any) => {
-                      if (item.tipo === "doenca")
-                        return (o.totalNotas ?? 0) > 0;
-                      else
-                        return (
-                          (o.totalBordadura ?? 0) > 0 || (o.totalArea ?? 0) > 0
-                        );
-                    })
-                  )
-                  .map((item, idx) => (
+                resumoDaPlanta.map((item, idx) => {
+                  const orgaosComDados = (item.orgaos || []).filter(
+                    (o: any) => {
+                      return (
+                        (o.totalNotas ?? 0) > 0 ||
+                        (o.totalBordadura ?? 0) > 0 ||
+                        (o.totalArea ?? 0) > 0
+                      );
+                    },
+                  );
+
+                  if (orgaosComDados.length === 0) return null;
+
+                  return (
                     <View key={item.nome + idx} style={styles.summaryItem}>
                       <Text style={styles.summaryItemTitle}>
                         {item.nome} — {item.percentualComposto?.toFixed(2) ?? 0}
                         %
                       </Text>
 
-                      {(item.orgaos || [])
-                        .filter((o: any) => {
-                          if (item.tipo === "doenca")
-                            return (o.totalNotas ?? 0) > 0;
-                          else
-                            return (
-                              (o.totalBordadura ?? 0) > 0 ||
-                              (o.totalArea ?? 0) > 0
-                            );
-                        })
-                        .map((o: any, j: any) => (
-                          <View key={o.nome + j} style={styles.organRow}>
-                            <Text style={styles.organName}>• {o.nome}</Text>
-                            {item.tipo === "doenca" ? (
+                      {orgaosComDados.map((o: any, j: any) => (
+                        <View key={o.nome + j} style={styles.organRow}>
+                          <Text style={styles.organName}>• {o.nome}</Text>
+
+                          {item.tipo === "doenca" || (o.totalNotas ?? 0) > 0 ? (
+                            <Text style={styles.organDetail}>
+                              Total: {o.totalNotas ?? 0} (
+                              {(o.porcentagem ?? 0).toFixed(2)}%)
+                            </Text>
+                          ) : (
+                            <View>
                               <Text style={styles.organDetail}>
-                                Total: {o.totalNotas ?? 0} (
-                                {(o.porcentagem ?? 0).toFixed(2)}%)
+                                Bord: {o.totalBordadura ?? 0} (
+                                {(o.porcentagemBordadura ?? 0).toFixed(2)}%)
                               </Text>
-                            ) : (
-                              <View>
-                                <Text style={styles.organDetail}>
-                                  Bord: {o.totalBordadura ?? 0} (
-                                  {(o.porcentagemBordadura ?? 0).toFixed(2)}%)
-                                </Text>
-                                <Text style={styles.organDetail}>
-                                  Área: {o.totalArea ?? 0} (
-                                  {(o.porcentagemArea ?? 0).toFixed(2)}%)
-                                </Text>
-                                <Text
-                                  style={[
-                                    styles.organDetail,
-                                    { fontWeight: "bold" },
-                                  ]}
-                                >
-                                  Média: {(o.porcentagemMedia ?? 0).toFixed(2)}%
-                                </Text>
-                              </View>
-                            )}
-                          </View>
-                        ))}
+                              <Text style={styles.organDetail}>
+                                Área: {o.totalArea ?? 0} (
+                                {(o.porcentagemArea ?? 0).toFixed(2)}%)
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.organDetail,
+                                  { fontWeight: "bold" },
+                                ]}
+                              >
+                                Média: {(o.porcentagemMedia ?? 0).toFixed(2)}%
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      ))}
                     </View>
-                  ))
+                  );
+                })
               )}
             </View>
           </ErrorBoundary>
@@ -236,9 +263,43 @@ export const RenderFooter = ({
       <View style={styles.actionButtons}>
         <Pressable
           onPress={async () => {
-            await salvarAvaliacoes(avaliacoes, lote);
+            const sessaoId = `${lote}-${plantaSelecionada}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+            const dataAtual = new Date().toISOString();
+
+            const relatoriosFormatados = (resumoDaPlanta || []).flatMap(
+              (itemDoenca) => {
+                if (!itemDoenca.orgaos) return [];
+
+                return itemDoenca.orgaos
+                  .filter((o: any) => o.totalNotas > 0)
+                  .map((o: any) => ({
+                    doenca: itemDoenca.nome,
+                    orgao: o.nome,
+                    porcentagem: o.porcentagem,
+                    totalNotas: o.totalNotas,
+                  }));
+              },
+            );
+
+            const pacote = {
+              header: {
+                idUnico: sessaoId,
+                lote: lote,
+                planta: plantaSelecionada,
+                centroCusto: centroCustoSelecionado,
+                nomeAvaliador: nomeAvaliador || "Desconhecido",
+                criadoEm: dataAtual,
+              },
+              avaliacoes: avaliacoes,
+              relatorios: relatoriosFormatados,
+            };
+
+            // 4. Salvar tudo junto (Offline)
+            await salvarPacoteOffline(pacote);
+
+            // 5. Limpar a tela para a próxima planta
             setAvaliacoes([]);
-            setResetKey((prevKey) => prevKey + 1);
+            setResetKey((prev) => prev + 1);
           }}
           style={({ pressed }) => [
             styles.primaryButton,
@@ -249,7 +310,9 @@ export const RenderFooter = ({
           disabled={isSaving}
         >
           <Text style={styles.primaryButtonText}>
-            {isSaving ? "Salvando..." : `💾 Salvar Lote ${lote}`}
+            {isSaving
+              ? "Salvando..."
+              : `💾 Salvar Planta ${plantaSelecionada} (Pacote)`}
           </Text>
         </Pressable>
 

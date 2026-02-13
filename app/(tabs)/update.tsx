@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   Alert,
   Pressable,
@@ -8,12 +8,10 @@ import {
   ActivityIndicator,
   StatusBar,
 } from "react-native";
-import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import { Registro } from "../../data/daodaAvaliacao";
-import { SincronizarBanco } from "../../services/api";
+import { useFocusEffect } from "@react-navigation/native";
+import { ApiService } from "../../services/api";
 
 export default function UpdateScreen() {
   const [loading, setLoading] = useState(false);
@@ -22,27 +20,48 @@ export default function UpdateScreen() {
   const carregarPendencias = useCallback(async () => {
     try {
       const allKeys = await AsyncStorage.getAllKeys();
-      const keysAvaliacoes = allKeys.filter((key) =>
-        key.startsWith("@avaliacoes_")
-      );
-
-      let total = 0;
-      for (const chave of keysAvaliacoes) {
-        const item = await AsyncStorage.getItem(chave);
-        if (item) {
-          const dados = JSON.parse(item);
-          total += Array.isArray(dados) ? dados.length : 1;
-        }
-      }
-      setQtdPendentes(total);
+      const keysPacotes = allKeys.filter((key) => key.startsWith("@pacote_"));
+      setQtdPendentes(keysPacotes.length);
     } catch (e) {
-      console.log("Erro ao contar pendencias", e);
+      console.log(e);
     }
   }, []);
 
-  useEffect(() => {
-    carregarPendencias();
-  }, [carregarPendencias]);
+  useFocusEffect(
+    useCallback(() => {
+      carregarPendencias();
+    }, [carregarPendencias]),
+  );
+
+  const processarEnvioPacotes = async () => {
+    try {
+      const allKeys = await AsyncStorage.getAllKeys();
+      const keysPacotes = allKeys.filter((key) => key.startsWith("@pacote_"));
+
+      if (keysPacotes.length === 0) return;
+
+      const listaPacotes = [];
+      for (const key of keysPacotes) {
+        const json = await AsyncStorage.getItem(key);
+        if (json) {
+          listaPacotes.push(JSON.parse(json));
+        }
+      }
+
+      const resposta = await ApiService.sincronizarPacote(listaPacotes);
+
+      if (resposta) {
+        for (const key of keysPacotes) {
+          await AsyncStorage.removeItem(key);
+        }
+
+        Alert.alert("✅ Sucesso", `Sincronizados: ${resposta.total} pacotes.`);
+        setQtdPendentes(0);
+      }
+    } catch (error: any) {
+      Alert.alert("❌ Falha no Envio", error.message);
+    }
+  };
 
   const handleSync = async () => {
     if (loading) return;
@@ -55,54 +74,14 @@ export default function UpdateScreen() {
     setLoading(true);
 
     try {
-      const state = await NetInfo.fetch();
-      if (!state.isConnected || state.type !== "wifi") {
-        Alert.alert(
-          "⚠️ Conexão Exigida",
-          "Para economizar dados móveis, a sincronização só é permitida via Wi-Fi."
-        );
-        return;
-      }
+      // Verifica conexão (Opcional no emulador)
+      // const state = await NetInfo.fetch();
+      // if (!state.isConnected) { ... }
 
-      await sincronizarTodosLotes();
+      await processarEnvioPacotes();
     } finally {
       setLoading(false);
-    }
-  };
-
-  const sincronizarTodosLotes = async () => {
-    try {
-      const allKeys = await AsyncStorage.getAllKeys();
-      const keysAvaliacoes = allKeys.filter((key) =>
-        key.startsWith("@avaliacoes_")
-      );
-
-      let todasAvaliacoes: Registro[] = [];
-      for (const chave of keysAvaliacoes) {
-        const jsonAvaliacoes = await AsyncStorage.getItem(chave);
-        if (jsonAvaliacoes) {
-          todasAvaliacoes = [...todasAvaliacoes, ...JSON.parse(jsonAvaliacoes)];
-        }
-      }
-
-      const sucesso = await SincronizarBanco(todasAvaliacoes);
-
-      if (sucesso) {
-        for (const chave of keysAvaliacoes) {
-          await AsyncStorage.removeItem(chave);
-        }
-        setQtdPendentes(0);
-        Alert.alert(
-          "✅ Sucesso",
-          "Todos os dados foram enviados para a nuvem!"
-        );
-      }
-    } catch (error: any) {
-      console.error(error);
-      Alert.alert(
-        "❌ Erro no Envio",
-        `Falha ao conectar com o servidor.\n${error.message}`
-      );
+      carregarPendencias();
     }
   };
 
@@ -112,17 +91,16 @@ export default function UpdateScreen() {
 
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <Text style={{ fontSize: 40 }}>☁️</Text>
+          <Text style={{ fontSize: 40 }}>📦</Text>
         </View>
 
         <Text style={styles.title}>Sincronização</Text>
         <Text style={styles.subtitle}>
-          Envie os dados coletados offline para o sistema central.
+          Envie os pacotes de avaliação offline para o sistema central.
         </Text>
 
-        {/* CARD DE STATUS */}
         <View style={styles.statusCard}>
-          <Text style={styles.statusLabel}>Registros Pendentes</Text>
+          <Text style={styles.statusLabel}>Pacotes Pendentes</Text>
           <Text
             style={[
               styles.statusValue,
@@ -133,24 +111,12 @@ export default function UpdateScreen() {
           </Text>
           <Text style={styles.statusHelper}>
             {qtdPendentes > 0
-              ? "Você possui dados não salvos na nuvem."
-              : "Seu dispositivo está atualizado."}
+              ? "Dados aguardando envio."
+              : "Tudo sincronizado."}
           </Text>
-        </View>
-
-        <View style={styles.warningContainer}>
-          <Text style={styles.warningIcon}>⚠️</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.warningTitle}>Requer Wi-Fi</Text>
-            <Text style={styles.warningText}>
-              Para evitar consumo excessivo do seu plano de dados, conecte-se a
-              uma rede Wi-Fi.
-            </Text>
-          </View>
         </View>
       </View>
 
-      {/* BOTÃO DE AÇÃO NO RODAPÉ */}
       <View style={styles.footer}>
         <Pressable
           onPress={handleSync}
@@ -165,7 +131,7 @@ export default function UpdateScreen() {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.buttonText}>
-              {qtdPendentes === 0 ? "Tudo Sincronizado" : "Sincronizar Agora"}
+              {qtdPendentes === 0 ? "Atualizado" : "Sincronizar Pacotes"}
             </Text>
           )}
         </Pressable>
@@ -185,8 +151,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
-  // Cabeçalho
   iconContainer: {
     width: 80,
     height: 80,
@@ -211,7 +175,6 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     lineHeight: 22,
   },
-
   statusCard: {
     width: "100%",
     backgroundColor: "#ffffff",
@@ -243,32 +206,6 @@ const styles = StyleSheet.create({
   statusHelper: {
     fontSize: 14,
     color: "#64748b",
-  },
-
-  warningContainer: {
-    flexDirection: "row",
-    backgroundColor: "#fffbeb",
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#fcd34d",
-    alignItems: "center",
-    width: "100%",
-  },
-  warningIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  warningTitle: {
-    fontWeight: "bold",
-    color: "#b45309",
-    marginBottom: 2,
-    fontSize: 15,
-  },
-  warningText: {
-    fontSize: 13,
-    color: "#92400e",
-    lineHeight: 18,
   },
 
   footer: {

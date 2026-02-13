@@ -12,7 +12,7 @@ interface OrgaoItemProps {
   getCheckboxValue: (
     planta: number,
     itemNome: string,
-    orgaoNome: string
+    orgaoNome: string,
   ) => boolean;
   handleChange: (
     planta: number,
@@ -23,7 +23,7 @@ interface OrgaoItemProps {
     localItem: string | undefined,
     extra: any,
     nota: number,
-    cc: string
+    cc: string,
   ) => void;
   getNota: (
     planta: number,
@@ -32,7 +32,7 @@ interface OrgaoItemProps {
     q: string,
     r: string | undefined,
     localItem: string | undefined,
-    cc: string
+    cc: string,
   ) => number;
   isSaving: boolean;
   centroCustoSelecionado: string;
@@ -83,7 +83,7 @@ const OrgaoItem = React.memo(
                 q,
                 r,
                 localItem,
-                centroCustoSelecionado
+                centroCustoSelecionado,
               );
             });
           } else {
@@ -95,7 +95,7 @@ const OrgaoItem = React.memo(
               q,
               undefined,
               localItem,
-              centroCustoSelecionado
+              centroCustoSelecionado,
             );
           }
         });
@@ -137,44 +137,44 @@ const OrgaoItem = React.memo(
           localItem,
           undefined,
           nota,
-          centroCustoSelecionado
+          centroCustoSelecionado,
         );
       }, 300),
-      [handleChange, centroCustoSelecionado]
+      [handleChange, centroCustoSelecionado],
     );
 
     if (itemSelecionado.nome === "INIMIGOS NATURAIS") {
       return (
         <View style={styles.cardContainer}>
-          <View style={styles.checkboxContainer}>
+          <Pressable
+            onPress={() =>
+              handleCheckbox(
+                plantaSelecionada,
+                itemSelecionado.nome,
+                orgao.nome,
+              )
+            }
+            disabled={isSaving}
+            style={styles.checkboxRow}
+          >
             <Text style={styles.checkboxLabel}>{orgao.nome}</Text>
-            <Pressable
-              onPress={() =>
-                handleCheckbox(
-                  plantaSelecionada,
-                  itemSelecionado.nome,
-                  orgao.nome
-                )
-              }
-              disabled={isSaving}
+            <View
               style={[
                 styles.checkboxBase,
                 getCheckboxValue(
                   plantaSelecionada,
                   itemSelecionado.nome,
-                  orgao.nome
+                  orgao.nome,
                 ) && styles.checkboxChecked,
               ]}
             >
               {getCheckboxValue(
                 plantaSelecionada,
                 itemSelecionado.nome,
-                orgao.nome
-              ) && (
-                <Text style={{ color: "white", fontWeight: "bold" }}>✓</Text>
-              )}
-            </Pressable>
-          </View>
+                orgao.nome,
+              ) && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+          </Pressable>
         </View>
       );
     }
@@ -183,66 +183,77 @@ const OrgaoItem = React.memo(
       if (!orgao.precisaRamo) {
         const key = `${localItem ?? "single"}-${q}-single`;
         return (
-          <View style={styles.pickerRow}>
-            <DropDownPicker
-              open={openKey === key}
-              value={notasLocais[key] ?? 0}
-              items={pickerItens}
-              multiple={false}
-              setOpen={() => setOpenKey(openKey === key ? null : key)}
-              setValue={(callback) => {
-                const nota = callback(notasLocais[key] ?? 0);
-                setNotasLocais((prev) => ({ ...prev, [key]: nota }));
-                debouncedHandleChange(
-                  plantaSelecionada,
-                  itemSelecionado.nome,
-                  orgao.nome,
-                  q,
-                  undefined,
-                  localItem,
-                  nota
-                );
-              }}
-              disabled={isSaving}
-              listMode="MODAL"
-              placeholder="0"
-              style={styles.dropdownStyle}
-              dropDownContainerStyle={styles.dropdownListStyle}
-            />
+          <View style={styles.inputRow}>
+            <Text style={styles.inputLabel}>Nota Geral</Text>
+            <View style={styles.dropdownWrapper}>
+              <DropDownPicker
+                open={openKey === key}
+                value={notasLocais[key] ?? 0}
+                items={pickerItens}
+                multiple={false}
+                setOpen={() => setOpenKey(openKey === key ? null : key)}
+                setValue={(callback) => {
+                  const nota = callback(notasLocais[key] ?? 0);
+                  setNotasLocais((prev) => ({ ...prev, [key]: nota }));
+                  debouncedHandleChange(
+                    plantaSelecionada,
+                    itemSelecionado.nome,
+                    orgao.nome,
+                    q,
+                    undefined,
+                    localItem,
+                    nota,
+                  );
+                }}
+                disabled={isSaving}
+                listMode="MODAL"
+                modalTitle={`Nota para ${q}`}
+                modalAnimationType="slide"
+                placeholder="0"
+                style={styles.dropdownStyle}
+                textStyle={styles.dropdownText}
+                dropDownContainerStyle={styles.dropdownListStyle}
+              />
+            </View>
           </View>
         );
       }
 
-      return ramos.map((r, idx) => {
+      return ramos.map((r) => {
         const key = `${localItem ?? "single"}-${q}-${r}`;
         return (
-          <View key={r} style={styles.pickerRow}>
-            <Text style={styles.ramoLabel}>{r}</Text>
-            <DropDownPicker
-              open={openKey === key}
-              value={notasLocais[key] ?? 0}
-              items={pickerItens}
-              multiple={false}
-              setOpen={() => setOpenKey(openKey === key ? null : key)}
-              setValue={(callback) => {
-                const nota = callback(notasLocais[key] ?? 0);
-                setNotasLocais((prev) => ({ ...prev, [key]: nota }));
-                debouncedHandleChange(
-                  plantaSelecionada,
-                  itemSelecionado.nome,
-                  orgao.nome,
-                  q,
-                  r,
-                  localItem,
-                  nota
-                );
-              }}
-              disabled={isSaving}
-              listMode="MODAL"
-              placeholder="0"
-              style={styles.dropdownStyle}
-              dropDownContainerStyle={styles.dropdownListStyle}
-            />
+          <View key={key} style={styles.inputRow}>
+            <Text style={styles.inputLabel}>{r}</Text>
+            <View style={styles.dropdownWrapper}>
+              <DropDownPicker
+                open={openKey === key}
+                value={notasLocais[key] ?? 0}
+                items={pickerItens}
+                multiple={false}
+                setOpen={() => setOpenKey(openKey === key ? null : key)}
+                setValue={(callback) => {
+                  const nota = callback(notasLocais[key] ?? 0);
+                  setNotasLocais((prev) => ({ ...prev, [key]: nota }));
+                  debouncedHandleChange(
+                    plantaSelecionada,
+                    itemSelecionado.nome,
+                    orgao.nome,
+                    q,
+                    r,
+                    localItem,
+                    nota,
+                  );
+                }}
+                disabled={isSaving}
+                listMode="MODAL"
+                modalTitle={`Nota para ${q} - ${r}`}
+                modalAnimationType="slide"
+                placeholder="0"
+                style={styles.dropdownStyle}
+                textStyle={styles.dropdownText}
+                dropDownContainerStyle={styles.dropdownListStyle}
+              />
+            </View>
           </View>
         );
       });
@@ -250,45 +261,173 @@ const OrgaoItem = React.memo(
 
     return (
       <View style={styles.cardContainer}>
-        <Text style={styles.cardTitle}>
-          {orgao.nome} (Max {orgao.notaMax})
-        </Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.cardTitle}>{orgao.nome}</Text>
+          <Text style={styles.maxNotaBadge}>Max: {orgao.notaMax}</Text>
+        </View>
 
         {locais.map((localItem: any, idx: number) => (
-          <View key={localItem ?? idx}>
-            {localItem && <Text style={styles.localTitle}>{localItem}</Text>}
-            {quadrantes.map((q) => (
-              <View key={q} style={styles.quadranteWrapper}>
-                <Text style={styles.quadranteText}>{q}</Text>
-                {renderRamos(q, localItem)}
+          <View key={localItem ?? idx} style={styles.locationContainer}>
+            {localItem && (
+              <View style={styles.localBadge}>
+                <Text style={styles.localTitle}>{localItem}</Text>
               </View>
-            ))}
+            )}
+
+            <View style={styles.gridContainer}>
+              {quadrantes.map((q) => (
+                <View key={q} style={styles.quadranteBox}>
+                  <Text style={styles.quadranteHeader}>{q}</Text>
+                  {renderRamos(q, localItem)}
+                </View>
+              ))}
+            </View>
           </View>
         ))}
       </View>
     );
-  }
+  },
 );
 
 export default OrgaoItem;
 
 const styles = StyleSheet.create({
   cardContainer: {
-    padding: 12,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    marginBottom: 12,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    marginBottom: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  cardTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  localTitle: { fontSize: 16, fontWeight: "bold", marginTop: 8 },
-  quadranteWrapper: { marginTop: 8 },
-  quadranteText: { fontSize: 16, fontWeight: "bold" },
-  pickerRow: { flexDirection: "row", alignItems: "center", marginVertical: 6 },
-  ramoLabel: { width: 40, fontWeight: "bold" },
-  dropdownStyle: { borderColor: "#000", height: 45 },
-  dropdownListStyle: { borderColor: "#000" },
-  checkboxContainer: { flexDirection: "row", justifyContent: "space-between" },
-  checkboxLabel: { fontSize: 16, fontWeight: "bold" },
-  checkboxBase: { width: 28, height: 28, borderWidth: 2, borderRadius: 6 },
-  checkboxChecked: { backgroundColor: "#000" },
+
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+    paddingBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1e293b",
+    flex: 1,
+  },
+  maxNotaBadge: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#64748b",
+    backgroundColor: "#f1f5f9",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+
+  locationContainer: {
+    marginBottom: 10,
+  },
+  localBadge: {
+    backgroundColor: "#e0f2fe",
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  localTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#0369a1",
+  },
+
+  gridContainer: {
+    gap: 12,
+  },
+  quadranteBox: {
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 8,
+    padding: 10,
+    backgroundColor: "#fafafa",
+  },
+  quadranteHeader: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#334155",
+    marginBottom: 8,
+  },
+
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: "#f1f5f9",
+  },
+  inputLabel: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#475569",
+  },
+
+  dropdownWrapper: {
+    width: 90,
+  },
+  dropdownStyle: {
+    minHeight: 36,
+    backgroundColor: "#ffffff",
+    borderColor: "#cbd5e1",
+    borderRadius: 6,
+    paddingHorizontal: 5,
+  },
+  dropdownText: {
+    fontSize: 14,
+    textAlign: "center",
+    fontWeight: "bold",
+  },
+  dropdownListStyle: {
+    borderColor: "#cbd5e1",
+  },
+
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1e293b",
+  },
+  checkboxBase: {
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#cbd5e1",
+    backgroundColor: "#fff",
+  },
+  checkboxChecked: {
+    backgroundColor: "#2563eb",
+    borderColor: "#2563eb",
+  },
+  checkmark: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18,
+  },
 });
