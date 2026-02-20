@@ -24,23 +24,30 @@ const criarPontoLocalizacao = (
 });
 
 export async function Gps() {
-  const { status } = await Location.requestForegroundPermissionsAsync();
-  if (status !== "granted") {
-    Alert.alert("Permissão de Localização negada!");
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+
+    if (status !== "granted") {
+      Alert.alert("Permissão de Localização negada!");
+      return null;
+    }
+
+    const loc = await Location.getCurrentPositionAsync({});
+
+    return {
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+      altitude: loc.coords.altitude,
+      accuracy: loc.coords.accuracy,
+      altitudeAccuracy: loc.coords.altitudeAccuracy,
+      heading: loc.coords.heading,
+      speed: loc.coords.speed,
+      timestamp: loc.timestamp,
+    };
+  } catch (error) {
+    console.warn("Erro ao obter GPS:", error);
     return null;
   }
-
-  const loc = await Location.getCurrentPositionAsync({});
-  return {
-    latitude: loc.coords.latitude,
-    longitude: loc.coords.longitude,
-    altitude: loc.coords.altitude,
-    accuracy: loc.coords.accuracy,
-    altitudeAccuracy: loc.coords.altitudeAccuracy,
-    heading: loc.coords.heading,
-    speed: loc.coords.speed,
-    timestamp: loc.timestamp,
-  };
 }
 
 export const obterLocalizacaoComTime = async (

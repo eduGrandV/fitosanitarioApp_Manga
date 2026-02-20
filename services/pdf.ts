@@ -379,7 +379,7 @@ export async function gerarPDF(
 
     await MailComposer.composeAsync({
       //"wagner@grandvalle.com", "mangagv@grandvalle.com"
-      recipients: ["flavimar@grandvalle.com"],
+      recipients: ["wagner@grandvalle.com", "mangagv@grandvalle.com"],
       subject: `Relatório QTDA - Lote ${lote}`,
       body: `Segue em anexo o relatório de avaliação do Lote ${lote}.\n\nAvaliador: ${nomeAvaliador}`,
       isHtml: false,
