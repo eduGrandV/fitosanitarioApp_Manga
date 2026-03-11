@@ -298,6 +298,7 @@ export const doencasPragas: DoencaPraga[] = [
     locais: ["Bordadura", "Área interna da parcela"],
     avaliacoesExtras: ["1ª Av.", "2ª Av."],
   },
+
   {
     nome: "COCHONILHA",
     tipo: "praga",
@@ -309,6 +310,73 @@ export const doencasPragas: DoencaPraga[] = [
       },
       { nome: "FRUTO (Pseudococus sp.)", notaMax: 1, precisaRamo: true },
       { nome: "FRUTO (Pseudaonidia tribitiformis)", notaMax: 1 },
+    ],
+    locais: ["Bordadura", "Área interna da parcela"],
+  },
+  {
+    nome: "COCHONILHA CARAPAÇA",
+    tipo: "praga",
+    orgaos: [
+      {
+        nome: "FOLHA (Aulacaspis e Pseudaonidia)",
+        notaMax: 1,
+        precisaRamo: true,
+      },
+      { nome: "FRUTO ", notaMax: 1, precisaRamo: true },
+      { nome: "RAMO", notaMax: 1 },
+    ],
+    locais: ["Bordadura", "Área interna da parcela"],
+  },
+  {
+    nome: "COCHONILHA CABEÇA DE PREGO",
+    tipo: "praga",
+    orgaos: [
+      {
+        nome: "FOLHA (Aulacaspis e Pseudaonidia)",
+        notaMax: 1,
+        precisaRamo: true,
+      },
+      { nome: "FRUTO ", notaMax: 1, precisaRamo: true },
+    ],
+    locais: ["Bordadura", "Área interna da parcela"],
+  },
+
+   {
+    nome: "COCHONILHA ESTRELA",
+    tipo: "praga",
+    orgaos: [
+      {
+        nome: "FOLHA (Aulacaspis e Pseudaonidia)",
+        notaMax: 1,
+        precisaRamo: true,
+      },
+      { nome: "FRUTO ", notaMax: 1, precisaRamo: true },
+    ],
+    locais: ["Bordadura", "Área interna da parcela"],
+  },
+  {
+    nome: "Acaro Rajado",
+    tipo: "praga",
+    orgaos: [
+      {
+        nome: "FOLHA (Aulacaspis e Pseudaonidia)",
+        notaMax: 2,
+        precisaRamo: true,
+      },
+      { nome: "FRUTO ", notaMax: 1, precisaRamo: true },
+    ],
+    locais: ["Bordadura", "Área interna da parcela"],
+  },
+  {
+    nome: "Acaro Vermelho",
+    tipo: "praga",
+    orgaos: [
+      {
+        nome: "FOLHA (Aulacaspis e Pseudaonidia)",
+        notaMax: 2,
+        precisaRamo: true,
+      },
+      { nome: "FRUTO ", notaMax: 1, precisaRamo: true },
     ],
     locais: ["Bordadura", "Área interna da parcela"],
   },
