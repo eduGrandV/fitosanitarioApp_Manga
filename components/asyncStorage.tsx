@@ -269,14 +269,28 @@ export const SincronizarIndicadores = async (
 
 export const salvarPacoteOffline = async (pacoteCompleto: any) => {
   try {
+    // 1. Geramos a string JSON primeiro para medir o impacto na RAM
+    const stringData = JSON.stringify(pacoteCompleto);
+    
+    // 2. Log de monitoramento (Essencial para diagnosticar o crash)
+    const tamanhoEmMB = (stringData.length / (1024 * 1024)).toFixed(2);
+    console.log(`📏 Tentando salvar pacote offline. Tamanho: ${tamanhoEmMB} MB`);
+
+    // Alerta se o pacote passar de 2MB (AsyncStorage começa a sofrer aqui)
+    if (stringData.length > 2 * 1024 * 1024) {
+      console.warn("🚨 ALERTA: Pacote muito grande! Isso pode causar o erro 'Scudo' no motor Hermes.");
+    }
+
+    // 3. Geramos a chave única
     const key = `@pacote_${pacoteCompleto.header.lote}_${pacoteCompleto.header.planta}_${Date.now()}`;
 
-    await AsyncStorage.setItem(key, JSON.stringify(pacoteCompleto));
+    // 4. Salvamento
+    await AsyncStorage.setItem(key, stringData);
 
-    console.log("📦 Pacote Completo (Amarração) salvo offline:", key);
+    console.log("📦 Pacote Completo salvo offline com sucesso:", key);
     return true;
   } catch (e) {
-    console.error("Erro ao salvar pacote offline", e);
+    console.error("❌ Erro fatal ao salvar pacote offline:", e);
     return false;
   }
 };
@@ -286,30 +300,37 @@ export const sincronizarPacotesCompletos = async () => {
     const allKeys = await AsyncStorage.getAllKeys();
     const keysPacotes = allKeys.filter((key) => key.startsWith("@pacote_"));
 
-    if (keysPacotes.length === 0) return;
+    if (keysPacotes.length === 0) return true;
 
-    let listaParaEnvio = [];
+    console.log(`Iniciando sincronização de ${keysPacotes.length} pacotes...`);
 
     for (const key of keysPacotes) {
       const json = await AsyncStorage.getItem(key);
-      if (json) listaParaEnvio.push(JSON.parse(json));
-    }
+      if (!json) continue;
 
-    const response = await fetch(
-      "http://10.0.2.2:3004/api/sincronizar-pacote",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(listaParaEnvio),
-      },
-    );
+      // Enviamos um por um para não estourar a memória (Hermes/Scudo)
+      const response = await fetch(
+        "http://10.0.2.2:3004/api/sincronizar-pacote",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // Enviamos o JSON direto como string para economizar o parse/stringify
+          body: json, 
+        }
+      );
 
-    if (response.ok) {
-      for (const key of keysPacotes) {
+      if (response.ok) {
+        // Só remove do celular se o servidor confirmar o recebimento
         await AsyncStorage.removeItem(key);
+        console.log(`✅ Pacote ${key} sincronizado e removido.`);
+      } else {
+        console.warn(`⚠️ Falha ao sincronizar pacote ${key}. Status: ${response.status}`);
+        // Opcional: interromper o loop se o servidor estiver fora do ar
+        return false; 
       }
-      return true;
     }
+
+    return true;
   } catch (error) {
     console.error("Erro no envio do pacote:", error);
     return false;
