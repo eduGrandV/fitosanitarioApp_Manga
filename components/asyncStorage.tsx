@@ -1,8 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Location from "expo-location";
 import React, { useState } from "react";
 import { Alert, Modal, Pressable, Text, TextInput, View } from "react-native";
-import { locaPlanta, PontoLocalizacao, Registro } from "../data/daodaAvaliacao";
+import { Registro } from "../data/daodaAvaliacao";
 
 type Props = {
   lote: string;
@@ -25,7 +24,14 @@ export const salvarAvaliacoes = async (
       ? JSON.parse(dadosAntigosJSON)
       : [];
 
-    const todosOsDados = [...dadosAntigos, ...novasAvaliacoes];
+    const mapa = new Map();
+
+    [...dadosAntigos, ...novasAvaliacoes].forEach((item) => {
+      const key = `${item.planta}-${item.doencaOuPraga}-${item.orgao}-${item.identificadorDeLocal}-${item.ramo}-${item.numeroLocal}`;
+      mapa.set(key, item);
+    });
+
+    const todosOsDados = Array.from(mapa.values());
 
     await AsyncStorage.setItem(chaveAvaliacoes, JSON.stringify(todosOsDados));
 
@@ -237,7 +243,7 @@ export const SincronizarIndicadores = async (
         planta,
         centroCusto,
         nome: item.nome,
-        percentualComposto: item.percentualComposto,
+        percentualComposto: (item.percentualComposto ?? 0) / 10,
         totalNotas: item.orgaos?.reduce(
           (acc: number, cur: any) => acc + (cur.totalNotas || 0),
           0,
@@ -245,6 +251,9 @@ export const SincronizarIndicadores = async (
       }));
 
     if (dadosParaEnviar.length === 0) return;
+
+    // Log do payload enviado para o backend
+    console.log('Payload enviado para o backend:', JSON.stringify(dadosParaEnviar, null, 2));
 
     await fetch("http://10.0.2.2:3004/api/sincronizar-relatorio", {
       method: "POST",

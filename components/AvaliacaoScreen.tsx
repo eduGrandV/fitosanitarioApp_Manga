@@ -18,11 +18,11 @@ import {
   PontoLocalizacao,
 } from "../data/daodaAvaliacao";
 
-import { useResumoPlanta } from "../app/hooks/useResumoPlanta";
 import { RenderHeader, useAvaliacaoScreenState } from "../app/hooks/header";
 import { RenderFooter } from "../app/hooks/footer";
 import OrgaoItem from "../app/hooks/orgao";
 import { obterLocalizacaoComTime, localizacaoPadrao } from "./gps";
+import { useResumoPlanta } from "../app/hooks/useResumoPlanta";
 
 interface ModalMapGPSProps {
   visible: boolean;

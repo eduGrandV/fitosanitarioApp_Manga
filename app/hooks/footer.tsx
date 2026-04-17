@@ -186,7 +186,7 @@ export const RenderFooter = ({
                   return (
                     <View key={item.nome + idx} style={styles.summaryItem}>
                       <Text style={styles.summaryItemTitle}>
-                        {item.nome} — {item.percentualComposto?.toFixed(2) ?? 0}
+                        {item.nome} — {((item.percentualComposto ?? 0)).toFixed(2)}
                         %
                       </Text>
 
@@ -197,7 +197,7 @@ export const RenderFooter = ({
                           {item.tipo === "doenca" || (o.totalNotas ?? 0) > 0 ? (
                             <Text style={styles.organDetail}>
                               Total: {o.totalNotas ?? 0} (
-                              {(o.porcentagem ?? 0).toFixed(2)}%)
+                              {((o.porcentagem ?? 0)).toFixed(2)}%)
                             </Text>
                           ) : (
                             <View>
@@ -271,12 +271,16 @@ export const RenderFooter = ({
                 if (!itemDoenca.orgaos) return [];
 
                 return itemDoenca.orgaos
-                  .filter((o: any) => o.totalNotas > 0)
+                  .filter((o: any) =>
+                    (o.totalNotas ?? 0) > 0 ||
+                    (o.totalBordadura ?? 0) > 0 ||
+                    (o.totalArea ?? 0) > 0
+                  )
                   .map((o: any) => ({
                     doenca: itemDoenca.nome,
                     orgao: o.nome,
-                    porcentagem: o.porcentagem,
-                    totalNotas: o.totalNotas,
+                    porcentagem: o.porcentagem ?? o.porcentagemMedia ?? 0,
+                    totalNotas: o.totalNotas ?? (o.totalBordadura ?? 0) + (o.totalArea ?? 0),
                   }));
               },
             );

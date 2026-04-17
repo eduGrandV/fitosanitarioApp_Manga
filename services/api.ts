@@ -1,5 +1,6 @@
 const BASE_URL_EMULADOR = "http://10.0.2.2:3004/api";
 
+//const BASE_URL_FISICO = "http://localhost:3005/api";
 const BASE_URL_FISICO = "http://192.168.253.18:3005/api";
 
 
