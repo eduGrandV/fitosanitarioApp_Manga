@@ -40,26 +40,38 @@ export default function UpdateScreen() {
 
       if (keysPacotes.length === 0) return;
 
-      const listaPacotes = [];
+      let pacotesSincronizados = 0;
+
+      // Loop cirúrgico: Processa UM por vez
       for (const key of keysPacotes) {
         const json = await AsyncStorage.getItem(key);
+        
         if (json) {
-          listaPacotes.push(JSON.parse(json));
+          const pacote = JSON.parse(json);
+
+          // Envia apenas o pacote atual (colocado em array caso sua API exija esse formato)
+          const resposta = await ApiService.sincronizarPacote([pacote]);
+
+          // Se a API confirmar o recebimento deste pacote específico
+          if (resposta) {
+            // Remove ele do celular para liberar espaço instantaneamente
+            await AsyncStorage.removeItem(key);
+            pacotesSincronizados++;
+            
+            // Bônus: Atualiza a tela em tempo real para o usuário ver os números caindo
+            setQtdPendentes((prev) => prev - 1);
+          }
         }
       }
 
-      const resposta = await ApiService.sincronizarPacote(listaPacotes);
-
-      if (resposta) {
-        for (const key of keysPacotes) {
-          await AsyncStorage.removeItem(key);
-        }
-
-        Alert.alert("✅ Sucesso", `Sincronizados: ${resposta.total} pacotes.`);
-        setQtdPendentes(0);
+      // Finaliza o fluxo mostrando o total que deu certo
+      if (pacotesSincronizados > 0) {
+        Alert.alert("✅ Sucesso", `Sincronizados: ${pacotesSincronizados} pacotes.`);
       }
+
     } catch (error: any) {
-      Alert.alert("❌ Falha no Envio", error.message);
+      // Se a internet cair no meio do loop, ele para, mas os que já foram enviados não são perdidos!
+      Alert.alert("❌ Falha Parcial ou Total", error.message);
     }
   };
 
