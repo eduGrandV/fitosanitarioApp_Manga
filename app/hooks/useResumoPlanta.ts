@@ -27,8 +27,11 @@ export const useResumoPlanta = (
           // 8 partes para Folha/Ramo, 4 para os restantes
           const mult = o.nome.toUpperCase().includes("FOLHA") || o.nome.toUpperCase().includes("RAMO") ? 8 : 4;
 
+          // Puxa a nota máxima do órgão (geralmente 5 para doenças). Se não tiver, usa 5 como padrão.
+          const notaMaxOrgao = o.notaMax || 5;
+
           // A mágica: (mult * qtdePlantas) garante que a soma 7 dê 8.75% em vez de 87.5%
-          const divisorPlanta = mult * qtdePlantas;
+          const divisorPlanta = mult * qtdePlantas * notaMaxOrgao;
 
           const porcentagem = divisorPlanta > 0 ? (somaNotas * 100) / divisorPlanta : 0;
 
@@ -124,13 +127,15 @@ export const useResumoLote = (
 
           // Define partes por planta: 8 para folhas/ramos, 4 para vegetativa/frutos
           const mult = orgaoNome.toUpperCase().includes("FOLHA") || orgaoNome.toUpperCase().includes("RAMO") ? 8 : 4;
+          // Localiza o órgão completo para pegar a nota máxima dele
+          const orgaoCompleto = item.orgaos.find(org => org.nome === orgaoNome);
+          const notaMaxOrgao = orgaoCompleto?.notaMax || 5;
 
           somaTotalNotas += soma;
-          divisorTotalLote += (mult * qtdePlantas);
+          //diviso vira 400 ao inves de 80!
+          divisorTotalLote += (mult * qtdePlantas * notaMaxOrgao);
         });
-
-        // Exemplo Lote 10: Soma 7 -> (7 * 100) / 80 = 8.75%
-        // Exemplo Lote 14: Soma 7 -> (7 * 100) / 112 = 6.25%
+        // Exemplo Lote 10, Soma 7, Nota Máx 5: (7 * 100) / 400 = 1.75%
         percentualFinal = divisorTotalLote > 0 ? (somaTotalNotas * 100) / divisorTotalLote : 0;
 
       } else {

@@ -75,8 +75,12 @@ export async function gerarPDF(
       return item.orgaos.map(o => {
         const registrosOrgao = avalsItem.filter(r => r.orgao === o.nome);
         const soma = registrosOrgao.reduce((s, a) => s + (Number(a.nota) || 0), 0);
-        const mult = o.nome.toUpperCase().includes("FOLHA") ? 8 : 4;
-        const divisor = mult * qtdePlantas;
+
+        // 🚀 CORREÇÃO 1: Inclui o Ramo e adiciona a Nota Máxima (Padrão 5)
+        const mult = o.nome.toUpperCase().includes("FOLHA") || o.nome.toUpperCase().includes("RAMO") ? 8 : 4;
+        const notaMaxOrgao = o.notaMax || 5;
+
+        const divisor = mult * qtdePlantas * notaMaxOrgao; // Agora o divisor é 400, não 80!
         const pct = divisor > 0 ? (soma * 100) / divisor : 0;
 
         if (pct <= 0) return "";
@@ -84,7 +88,7 @@ export async function gerarPDF(
         return `<li style="${style}">${item.nome} (${o.nome}): ${pct.toFixed(2)}%</li>`;
       }).join("");
     } else {
-      // 🚀 PRAGAS: Cálculo completo para o resumo
+      // PRAGAS: Cálculo completo para o resumo
       const porcentagensDosOrgaos: number[] = [];
       let maxB = 4, maxA = 6;
       if (qtdePlantas === 14) { maxB = 5; maxA = 9; }
@@ -172,10 +176,12 @@ export async function gerarPDF(
 
           if (item.tipo === "doenca") {
             const soma = regs.reduce((s, r) => s + (Number(r.nota) || 0), 0);
-            const mult = o.nome.toUpperCase().includes("FOLHA") ? 8 : 4;
-            const pct = (soma * 100) / (mult * qtdePlantas);
 
-            // CORREÇÃO: Aqui mapeamos o quadrante em vez de deixar o "-" fixo
+            // 🚀 CORREÇÃO 2: Tabela detalhada agora também multiplica pela Nota Máxima (padrão 5)
+            const mult = o.nome.toUpperCase().includes("FOLHA") || o.nome.toUpperCase().includes("RAMO") ? 8 : 4;
+            const notaMaxDoenca = o.notaMax || 5;
+            const pct = (soma * 100) / (mult * qtdePlantas * notaMaxDoenca);
+
             const localTexto = regs.map(r => r.quadrante || 'Geral').join(", ");
 
             html += `<tr><td>${o.nome}</td><td>${localTexto}</td><td>${regs.map(r => r.nota).join(", ")}</td><td>${soma}</td><td>${pct.toFixed(2)}%</td></tr>`;
@@ -184,7 +190,7 @@ export async function gerarPDF(
               const rLocal = regs.filter(r => r.identificadorDeLocal === tipo);
               if (rLocal.length > 0) {
                 const soma = rLocal.reduce((s, r) => s + (Number(r.nota) || 0), 0);
-                let max = tipo === "Bordadura" ? 4 : 6; // Padrão Lote 10
+                let max = tipo === "Bordadura" ? 4 : 6;
                 if (qtdePlantas === 14) {
                   max = tipo === "Bordadura" ? 5 : 9;
                 } else if (qtdePlantas === 18) {

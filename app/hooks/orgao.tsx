@@ -57,9 +57,8 @@ const OrgaoItem = React.memo(
       : [undefined];
 
     const contextoKey = useMemo(() => {
-      return `${resetKey}|${plantaSelecionada}|${itemSelecionado.nome}|${
-        orgao.nome
-      }|${JSON.stringify(locais)}|${centroCustoSelecionado}`;
+      return `${resetKey}|${plantaSelecionada}|${itemSelecionado.nome}|${orgao.nome
+        }|${JSON.stringify(locais)}|${centroCustoSelecionado}`;
     }, [
       resetKey,
       plantaSelecionada,
@@ -126,22 +125,29 @@ const OrgaoItem = React.memo(
       }));
     }, [orgao.notaMax]);
 
-    const debouncedHandleChange = useCallback(
-      debounce((planta, itemNome, orgaoNome, q, r, localItem, nota) => {
-        handleChange(
-          planta,
-          itemNome,
-          orgaoNome,
-          q,
-          r,
-          localItem,
-          undefined,
-          nota,
-          centroCustoSelecionado,
-        );
-      }, 300),
+    const debouncedHandleChange = useMemo(
+      () =>
+        debounce((planta, itemNome, orgaoNome, q, r, localItem, nota) => {
+          handleChange(
+            planta,
+            itemNome,
+            orgaoNome,
+            q,
+            r,
+            localItem,
+            undefined,
+            nota,
+            centroCustoSelecionado,
+          );
+        }, 300),
       [handleChange, centroCustoSelecionado],
     );
+
+    useEffect(() => {
+      return () => {
+        debouncedHandleChange.flush();
+      };
+    }, [debouncedHandleChange]);
 
     if (itemSelecionado.nome === "INIMIGOS NATURAIS") {
       return (
